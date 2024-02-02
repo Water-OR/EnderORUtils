@@ -1,0 +1,12 @@
+{
+  "package": "io.github.enderor.mixins.others",
+  "required": true,
+  "refmap": "mixins.enderor.others.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+  ]
+}

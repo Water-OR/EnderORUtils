@@ -1,0 +1,53 @@
+enchantment.short_bow=短弓
+enchantment.enderman_killer=末影人杀手
+enchantment.long_sword=长刀
+
+enchantment.enderor.short_bow.desc=长按“使用”键自动射击
+enchantment.enderor.enderman_killer.desc=让弓可以伤害末影人
+enchantment.enderor.long_sword.desc=这是一把长刀
+
+itemGroup.enderor_items=Ender OR 实用工具
+
+item.item_mod.name=模组物品
+
+item.potion_ring.name.single=“%s”药水指环
+item.potion_ring.name.multiple=复合药水指环
+item.potion_ring.name=药水指环
+item.magnetic_ring.name=磁力指环
+item.enchanted_paper.name=附魔纸
+
+item.potion_ring.empty.description=与一个药水合成
+item.potion_ring.filled.description=穿戴以获得效果
+item.magnetic_ring.description=捡起3 1 3范围内的物品！
+item.enchanted_paper.empty.description=它是空的！
+
+tile.enchant_mover.name=附魔转移者
+
+config.enderor.default=默认
+config.enderor.default.effect_length=效果长度
+config.enderor.default.effect_show_particles=显示效果粒子
+
+config.enderor.client=客户端
+config.enderor.client.enable_hit_box=显示碰撞箱（不同于F3 + B）
+config.enderor.client.hit_box_color=碰撞箱颜色
+config.enderor.client.hit_box_width=碰撞箱宽度（边框）
+config.enderor.client.enable_arrow_hurt_entity_sound=开启箭伤害实体声音（与你伤害玩家一样）
+config.enderor.client.enable_swing_range=开启挥刀范围显示
+config.enderor.client.swing_range_border_color=挥刀范围边框颜色
+config.enderor.client.swing_range_border_width=挥刀范围边框宽度
+config.enderor.client.swing_range_face_color=挥刀范围表面颜色
+
+container.enchant_mover=附魔转移器
+
+gui.enchant_mover.merge_all=合并全部
+gui.enchant_mover.remove_all=移除全部
+
+enderor.command.oredict.usage=/oredict - 显示所有的矿物词典\n/oredict <矿物词典> - 显示矿物词典里所有的物品
+enderor.command.showhand.usage=/showhand <前缀空格：默认为4> - 显示手里物品的NBT
+enderor.command.enchantment_max_level.usage=/enchantment_max_level - 显示所有附魔和它们的最高等级\n/enchantment_max_level <附魔> 显示该附魔的最高等级\n/enchantment_max_level <附魔> <新等级> 如果新等级合法，将该附魔的最高等级改为新等级
+
+enderor.enchantment_max_level_changed=“%s”附魔的最高等级变为了 %s！
+
+jei.enderor.item_mod=当拿在手上时可以阻止你的死亡
+jei.enderor.potion_ring=可以给你永久的药水效果
+jei.enderor.enchanted_paper=用另一种方式存储附魔，不会因为id变化而改变

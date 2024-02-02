@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "enderor:item/potion_ring",
+    "layer1": "enderor:item/potion_ring_overlay"
+  }
+}

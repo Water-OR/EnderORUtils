@@ -1,0 +1,19 @@
+{
+  "package": "io.github.enderor.mixins.minecraft",
+  "required": true,
+  "refmap": "mixins.enderor.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinEnchantmentHelper",
+    "MixinEntityEnderman",
+    "MixinItemEnchantedBook",
+    "MixinItemStack",
+    "MixinPotionEffect"
+  ],
+  "client": [
+    "MixinMinecraft",
+    "MixinGuiNewChat"
+  ]
+}
