@@ -3,15 +3,12 @@ package io.github.enderor.utils;
 import com.google.common.collect.Lists;
 import io.github.enderor.config.EnchantsMaxLevel;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.nbt.NBTTagCompound;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class EnchantsHelper {
-  public static final  String            TAG_ID           = "ID";
   private static final List<Enchantment> enchantsAppeared = Lists.newArrayList();
   private static       boolean           enchantsInit     = false;
   
@@ -67,19 +64,4 @@ public class EnchantsHelper {
   }
   
   public static List<Enchantment> getEnchantsAppeared() { return enchantsAppeared; }
-  
-  @Nullable
-  public static Enchantment getEnchantInNBT(@NotNull NBTTagCompound compound) { return getEnchantInNBT(compound, ""); }
-  
-  @Nullable
-  public static Enchantment getEnchantInNBT(@NotNull NBTTagCompound compound, @NotNull String key) {
-    if (key.isEmpty()) { key = TAG_ID; }
-    if (compound.hasKey(key, 8)) {
-      return Enchantment.getEnchantmentByLocation(compound.getString(key));
-    } else if (compound.hasKey(key, 3)) {
-      return Enchantment.getEnchantmentByID(compound.getInteger(key));
-    } else {
-      return Enchantment.getEnchantmentByID(compound.getShort(key));
-    }
-  }
 }

@@ -82,9 +82,9 @@ public class ItemEnchantedPaper extends Item implements IHasRecipe {
   public void getSubItems(@NotNull CreativeTabs tab, @NotNull NonNullList<ItemStack> items) {
     if (!isSubItemsReady) { calcSubItems(); }
     if (tab.equals(EnderORUtils.MOD_TAB)) {
-      items.addAll(subItemsMax);
+      for (int i = 0, iMax = subItemsMax.size(); i < iMax; ++i) { items.add(subItemsMax.get(i));}
     } else if (tab.equals(CreativeTabs.SEARCH)) {
-      items.addAll(subItemsAll);
+      for (int i = 0, iMax = subItemsAll.size(); i < iMax; ++i) { items.add(subItemsAll.get(i));}
     }
   }
   

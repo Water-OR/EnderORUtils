@@ -8,9 +8,7 @@
   "mixins": [
     "MixinEnchantmentHelper",
     "MixinEntityEnderman",
-    "MixinItemEnchantedBook",
-    "MixinItemStack",
-    "MixinPotionEffect"
+    "MixinItemStack"
   ],
   "client": [
     "MixinMinecraft",
