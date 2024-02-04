@@ -4,8 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.github.enderor.blocks.EnderORBlockHandler;
 import io.github.enderor.items.EnderORItemHandler;
+import io.github.enderor.items.ItemEnchantedPaper;
+import io.github.enderor.items.baubles.ring.ItemPotionRing;
 import io.github.enderor.recipes.EnderORRecipe;
 import io.github.enderor.recipes.EnderORRecipesHandler;
+import io.github.enderor.utils.NullHelper;
 import mezz.jei.api.*;
 import mezz.jei.api.ingredients.IModIngredientRegistration;
 import mezz.jei.api.ingredients.VanillaTypes;
@@ -16,6 +19,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,7 +27,20 @@ import java.util.stream.Collectors;
 @JEIPlugin
 public class EnderORJEIPlugin implements IModPlugin {
   @Override
-  public void registerSubtypes(@NotNull ISubtypeRegistry subtypeRegistry) { }
+  public void registerSubtypes(@NotNull ISubtypeRegistry subtypeRegistry) {
+    subtypeRegistry.registerSubtypeInterpreter(EnderORItemHandler.ITEM_ENCHANTED_PAPER, stack -> {
+      final List<String> result = Lists.newArrayList();
+      ItemEnchantedPaper.getEnchants(stack).forEach((enchant, level) -> result.add(NullHelper.getRegistryNameString(enchant) + "%level:" + level));
+      result.sort(Comparator.naturalOrder());
+      return "ENCHANTED_PAPER:" + result;
+    });
+    subtypeRegistry.registerSubtypeInterpreter(EnderORItemHandler.ITEM_POTION_RING, stack -> {
+      final List<String> result = Lists.newArrayList();
+      ItemPotionRing.getEffects(stack).forEach((effect, level) -> result.add(NullHelper.getRegistryNameString(effect) + "%level:" + level));
+      result.sort(Comparator.naturalOrder());
+      return "POTION_RING:" + result;
+    });
+  }
   
   @Override
   public void registerIngredients(@NotNull IModIngredientRegistration registry) { }

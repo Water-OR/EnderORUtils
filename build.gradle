@@ -106,10 +106,12 @@ dependencies {
 
   // Example of deobfuscating a dependency
   // implementation rfg.deobf('curse.maven:had-enough-items-557549:4543375')
-//  implementation rfg.deobf('curse.maven:reid-629017:4949840')
   implementation rfg.deobf('curse.maven:had-enough-items-557549:4810661')
-//  implementation ('curse.maven:bookshelf-228525:2836960-deobf-2836962-sources-2836961')
+  implementation rfg.deobf('curse.maven:baubles-227083:2518667')
   implementation('curse.maven:enchantment-descriptions-250419:2689502-deobf-2689505-sources-2689503')
+//  implementation('curse.maven:endercore-231868:4671384')
+//  implementation('curse.maven:ender-io-64578:4674244')
+//  implementation ('curse.maven:bookshelf-228525:2836960-deobf-2836962-sources-2836961')
 //  implementation ('curse.maven:enchanting-plus-59413:2664227-deobf-2664230-sources-2664228')
 //  implementation ('curse.maven:potion-core-242872:2905184-deobf-2905186-sources-2905187')
 //  implementation rfg.deobf('curse.maven:just-enough-characters-250702:4692184')
@@ -117,7 +119,7 @@ dependencies {
 //  implementation rfg.deobf('curse.maven:so-many-enchantments-267035:3574478')
 //  implementation rfg.deobf('curse.maven:liquid-enchanting-289330:2925360')
 //  implementation rfg.deobf('curse.maven:combined-potions-262420:2460171')
-  implementation rfg.deobf('curse.maven:baubles-227083:2518667')
+//  implementation rfg.deobf('curse.maven:reid-629017:4949840')
 
   if (project.use_mixins.toBoolean()) {
     // Change your mixin refmap name here:

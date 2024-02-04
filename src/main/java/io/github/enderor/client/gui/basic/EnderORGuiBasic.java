@@ -21,7 +21,11 @@ public abstract class EnderORGuiBasic {
     this.height = height;
   }
   
+  public void initGui() { }
+  
   public abstract void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks);
+  
+  public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY)         { }
   
   public abstract void mouseClicked(Minecraft mc, int mouseX, int mouseY, int state);
   

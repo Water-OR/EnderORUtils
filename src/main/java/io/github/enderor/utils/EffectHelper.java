@@ -48,7 +48,7 @@ public final class EffectHelper {
     return effects0;
   }
   
-  public static @NotNull Map<Potion, Integer> mergeEffects(@NotNull Map<Potion, Integer> effects0, @NotNull List<PotionEffect> effects1) {
+  public static @NotNull Map<Potion, Integer> mergeEffects(@NotNull Map<Potion, Integer> effects0, @NotNull Collection<PotionEffect> effects1) {
     effects1.forEach(effect -> mergeEffect(effects0, effect));
     return effects0;
   }
@@ -57,7 +57,7 @@ public final class EffectHelper {
   public static @NotNull Map<Potion, Integer> mergeEffect(@NotNull Map<Potion, Integer> effects0, Potion potion, int level) {
     if (!effects0.containsKey(potion)) {
       effects0.put(potion, level);
-    } else if (effects0.get(potion) < level) {
+    } else if (effects0.get(potion) < level || effects0.get(potion) == 1 && level == 1) {
       effects0.replace(potion, level);
     } else if (effects0.get(potion) == level) {
       effects0.replace(potion, level + 1);

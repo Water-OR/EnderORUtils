@@ -26,6 +26,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.PotionType;
 import net.minecraft.potion.PotionUtils;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
@@ -40,10 +41,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
@@ -175,33 +173,31 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
     return I18n.format(getUnlocalizedNameInefficiently(stack) + ".name.multiple").trim();
   }
   
-  private final List<ItemStack> subItems        = Lists.newArrayList();
-  private       boolean         isSubItemsReady = false;
-  
-  public void calcSubItems() {
-    if (!EffectHelper.hasEffectsInit()) { return; }
-    final Map<Potion, Integer> effects = Maps.newHashMap();
-    subItems.add(getDefaultInstance());
-    EffectHelper.getEffectsAppeared().forEach((potion, levels) -> levels.forEach(level -> subItems.add(setEffect(getDefaultInstance(), potion, level))));
-    EffectHelper.getMultipleEffectsPotions().forEach(potionType -> {
-      effects.clear();
-      potionType.getEffects().forEach(effect -> EffectHelper.mergeEffect(effects, effect));
-      subItems.add(setEffects(getDefaultInstance(), effects));
-    });
-    effects.clear();
-    EffectHelper.getMultipleEffectsPotions().forEach(potionType -> potionType.getEffects().forEach(effect -> EffectHelper.mergeEffect(effects, effect)));
-    EffectHelper.getEffectsAppeared().forEach((potion, levels) -> EffectHelper.mergeEffect(effects, potion, levels.stream().max(Integer::compareTo).orElse(0)));
-    subItems.add(setEffects(getDefaultInstance(), effects));
-    isSubItemsReady = true;
-  }
-  
-  public List<ItemStack> getSubItems() { return subItems; }
-  
   @Override
   public void getSubItems(@NotNull CreativeTabs tab, @NotNull NonNullList<ItemStack> items) {
     if (!isInCreativeTab(tab)) { return; }
-    if (!isSubItemsReady) { calcSubItems(); }
-    items.addAll(getSubItems());
+    items.add(getDefaultInstance());
+    final Map<Potion, Set<Integer>> effectsAppeared = EffectHelper.getEffectsAppeared();
+    final Map<Potion, Integer>      maxLevels       = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
+    
+    Potion[] potions = effectsAppeared.keySet().stream().sorted(Comparator.comparingInt(Potion::getIdFromPotion)).toArray(Potion[]::new);
+    for (int i = 0, j, iMax = potions.length; i < iMax; ++i) {
+      Integer[] levels = effectsAppeared.get(potions[i]).stream().sorted(Integer::compare).toArray(Integer[]::new);
+      for (j = 0; j < levels.length; ++j) {
+        items.add(setEffect(getDefaultInstance(), potions[i], levels[j]));
+        EffectHelper.mergeEffect(maxLevels, potions[i], levels[j]);
+      }
+    }
+    
+    final List<PotionType> effectsMultiple = EffectHelper.getMultipleEffectsPotions();
+    final Map<Potion, Integer> effectsIn = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
+    for (int i = 0, j, iMax = effectsMultiple.size(); i < iMax; ++i) {
+      effectsIn.clear();
+      effectsMultiple.get(i).getEffects().forEach(effect -> EffectHelper.mergeEffect(effectsIn, effect));
+      items.add(setEffects(getDefaultInstance(), effectsIn));
+      EffectHelper.mergeEffects(maxLevels, effectsIn);
+    }
+    items.add(setEffects(getDefaultInstance(), maxLevels));
   }
   
   @Override

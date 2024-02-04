@@ -2,71 +2,53 @@ package io.github.enderor.client.gui.basic;
 
 import io.github.enderor.utils.Pair;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public class EnderORGuiButton extends EnderORGuiBasic {
-  public final int iconX, iconY, backgroundX, backgroundY;
-  public final ResourceLocation icon, background;
-  public final boolean hasIcon;
-  public final String  buttonText;
+  public final int     iconX;
+  public final int     iconY;
+  public final int     backgroundX;
+  public final int     backgroundY;
   public       int     buttonColor = 0;
+  public final boolean hasIcon;
+  
+  public final ResourceLocation background;
+  public final ResourceLocation icon;
   
   protected boolean hovering = false;
   protected boolean focusing = false;
+  protected boolean autoBind = false;
   
-  protected EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int iconX, int iconY, int widthIn, int heightIn, ResourceLocation background, ResourceLocation icon, String buttonText) {
+  public EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int widthIn, int heightIn, ResourceLocation background) { this(buttonId, x, y, backgroundX, backgroundY, 0, 0, widthIn, heightIn, background, null); }
+  
+  protected EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int iconX, int iconY, int widthIn, int heightIn, ResourceLocation background, ResourceLocation icon) {
     super(buttonId, x, y, widthIn, heightIn);
-    this.buttonText  = buttonText;
     this.iconX       = iconX;
     this.iconY       = iconY;
     this.icon        = icon;
     this.backgroundX = backgroundX;
     this.backgroundY = backgroundY;
     this.background  = background;
-    hasIcon     = (icon != null);
-  }
-  
-  public EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int widthIn, int heightIn, ResourceLocation background, String buttonText) {
-    this(buttonId, x, y, backgroundX, backgroundY, 0, 0, widthIn, heightIn, background, null, buttonText);
-  }
-  
-  public EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int iconX, int iconY, int widthIn, int heightIn, ResourceLocation background, ResourceLocation icon) {
-    this(buttonId, x, y, backgroundX, backgroundY, iconX, iconY, widthIn, heightIn, background, icon, "");
-  }
-  
-  public EnderORGuiButton(int buttonId, int x, int y, int backgroundX, int backgroundY, int iconX, int iconY, int widthIn, int heightIn, ResourceLocation texture) {
-    this(buttonId, x, y, backgroundX, backgroundY, iconX, iconY, widthIn, heightIn, texture, texture);
-  }
-  
-  public EnderORGuiButton(int buttonId, int x, int y, int textureX, int textureY, int widthIn, int heightIn, ResourceLocation texture) {
-    this(buttonId, x, y, textureX, textureY, textureX, textureY, widthIn, heightIn, texture);
+    hasIcon          = (icon != null);
   }
   
   @Override
   public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-    if (!visible) {
-      return;
-    }
-    mc.getTextureManager().bindTexture(background);
-    Pair<Integer, Integer> drawPosition = getBackgroundPosition();
-    int                    drawX        = drawPosition.getKey();
-    int                    drawY        = drawPosition.getValue();
-    
+    if (!visible) { return; }
+    if (autoBind) { mc.getTextureManager().bindTexture(background); }
+    Pair<Integer, Integer> drawP = getBackgroundPosition();
+    int                    drawX = drawP.getKey();
+    int                    drawY = drawP.getValue();
     dummyGui.drawTexturedModalRect(x, y, drawX, drawY, width, height);
-    
     hovering = isHovering(mc, mouseX, mouseY);
     
     if (hasIcon) {
-      mc.getTextureManager().bindTexture(icon);
-      drawPosition = getIconPosition();
-      drawX        = drawPosition.getKey();
-      drawY        = drawPosition.getValue();
-      
+      if (autoBind) { mc.getTextureManager().bindTexture(icon); }
+      drawP = getIconPosition();
+      drawX = drawP.getKey();
+      drawY = drawP.getValue();
       dummyGui.drawTexturedModalRect(x, y, drawX, drawY, width, height);
-    } else {
-      drawText(mc, mouseX, mouseY, partialTicks);
     }
   }
   
@@ -116,12 +98,7 @@ public class EnderORGuiButton extends EnderORGuiBasic {
     return 0xe0e0e0;
   }
   
-  public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-    FontRenderer fontRenderer = mc.fontRenderer;
-    int          drawX        = x + (width) / 2;
-    int          drawY        = y + (height - fontRenderer.FONT_HEIGHT) / 2;
-    dummyGui.drawCenteredString(mc.fontRenderer, buttonText, drawX, drawY, getTextColor());
-  }
+  public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY) { }
   
   @Override
   public void mouseClicked(Minecraft mc, int mouseX, int mouseY, int state) { mouseDragged(mc, mouseX, mouseY, state, 0); }
@@ -131,18 +108,4 @@ public class EnderORGuiButton extends EnderORGuiBasic {
   
   @Override
   public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) { focusing = false; }
-  
-  public int getIconX()                   { return iconX; }
-  
-  public int getIconY()                   { return iconY; }
-  
-  public int getBackgroundX()             { return backgroundX; }
-  
-  public int getBackgroundY()             { return backgroundY; }
-  
-  public ResourceLocation getIcon()       { return icon; }
-  
-  public ResourceLocation getBackground() { return background; }
-  
-  public boolean isHasIcon()              { return hasIcon; }
 }

@@ -47,7 +47,6 @@ public class EnchantsMaxLevel {
       property.set(MAX_LEVEL.getOrDefault(enchant, Integer.parseInt(property.getDefault())));
     });
     config.save();
-    reload();
   }
   
   public static boolean hasConfigPrepared() { return configPrepared; }
@@ -55,12 +54,4 @@ public class EnchantsMaxLevel {
   public static boolean checkLevelLegal(@NotNull Enchantment enchant, int level) {
     return enchant.getMaxLevel() <= level;
   }
-  
-  private static final Set<ActionNoIO> LISTENERS = Sets.newHashSet();
-  
-  public static void addListener(ActionNoIO listener) { LISTENERS.add(listener); }
-  
-  public static void removeListener(ActionNoIO listener) { LISTENERS.remove(listener); }
-  
-  private static void reload() { LISTENERS.forEach(ActionNoIO::apply); }
 }

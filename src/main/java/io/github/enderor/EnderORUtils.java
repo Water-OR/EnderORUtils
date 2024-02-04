@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 public class EnderORUtils {
   public final static String       MOD_ID             = "enderor";
   public final static String       MOD_NAME           = "Ender OR Utils";
-  public final static String       MOD_VERSION        = "1.1";
+  public final static String       MOD_VERSION        = "1.2";
   public final static String       MOD_DEPENDENCIES   = "required-after:forge@[14.21.1.2395,);required-after:baubles;required-after:jei;required-after:enchdesc;";
   public final static String       MOD_ACCEPT_VERSION = "[1.12.2]";
   public static final CreativeTabs MOD_TAB            = new EnderORCreativeTab();

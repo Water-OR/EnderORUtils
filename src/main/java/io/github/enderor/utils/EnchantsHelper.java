@@ -58,7 +58,7 @@ public class EnchantsHelper {
   
   public static void initAppearedEnchantments() {
     Enchantment.REGISTRY.forEach(enchantment -> enchantsAppeared.add(NullHelper.checkNull(enchantment)));
-    enchantsAppeared.sort(Comparator.comparing(NullHelper::getRegistryNameString));
+    enchantsAppeared.sort(Comparator.comparingInt(Enchantment::getEnchantmentID));
     enchantsInit = true;
     EnchantsMaxLevel.load();
   }

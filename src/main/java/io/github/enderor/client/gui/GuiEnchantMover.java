@@ -27,23 +27,27 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
 @SideOnly (Side.CLIENT)
 public class GuiEnchantMover extends GuiContainer {
-  public static final ResourceLocation ENCHANT_MOVER_GUI = new ResourceLocation(EnderORUtils.MOD_ID, "textures/gui/container/enchant_mover.png");
+  private static final ResourceLocation ENCHANT_MOVER_GUI = new ResourceLocation(EnderORUtils.MOD_ID, "textures/gui/container/enchant_mover.png");
   
-  protected final TileEntityEnchantMover tile;
-  protected final InventoryPlayer        inventoryPlayer;
-  protected final ContainerEnchantMover  container;
+  private final TileEntityEnchantMover tile;
+  private final InventoryPlayer        inventoryPlayer;
+  private final ContainerEnchantMover  container;
   
-  protected int drawX, drawY;
+  private int drawX;
+  private int drawY;
+  private int scale;
   
-  protected final List<String> hoveringTexts = new ArrayList<>();
-  
-  protected List<EnderORGuiBasic> entryList = new ArrayList<>();
+  private final List<String>          hoveringTexts = new ArrayList<>();
+  private final List<EnderORGuiBasic> entryList     = new ArrayList<>();
   
   public GuiEnchantMover(InventoryPlayer inventoryPlayer, @NotNull TileEntityEnchantMover tileEnchantMover) {
     super(tileEnchantMover.createContainer(inventoryPlayer, inventoryPlayer.player));
@@ -62,27 +66,24 @@ public class GuiEnchantMover extends GuiContainer {
   @Override
   public void initGui() {
     super.initGui();
-  }
-  
-  protected void calcDrawPos() {
+    scale = getScaledResolution(mc).getScaleFactor();
     drawX = (width - xSize) / 2;
     drawY = (height - ySize) / 2;
+    entryList.forEach(EnderORGuiBasic::initGui);
   }
   
   @Override
   public void drawScreen(int mouseX, int mouseY, float partialTicks) {
     GL11.glPushMatrix();
-    container.calcEnchants();
     drawDefaultBackground();
-    calcDrawPos();
-    hoveringTexts.clear();
     super.drawScreen(mouseX, mouseY, partialTicks);
     
+    hoveringTexts.clear();
     if (inventoryPlayer.getItemStack().isEmpty() && getSlotUnderMouse() != null && !getSlotUnderMouse().getStack().isEmpty()) {
       hoveringTexts.addAll(getItemToolTip(getSlotUnderMouse().getStack()));
+    } else {
+      entryList.stream().filter(entry -> entry instanceof IHasHoveringText).forEach(entry -> ((IHasHoveringText) entry).addHoveringText(hoveringTexts));
     }
-    
-    entryList.stream().filter(entry -> entry instanceof IHasHoveringText).forEach(entry -> ((IHasHoveringText) entry).addHoveringText(hoveringTexts));
     drawHoveringText(hoveringTexts, mouseX, mouseY);
     GL11.glPopMatrix();
   }
@@ -113,36 +114,31 @@ public class GuiEnchantMover extends GuiContainer {
   public void handleMouseInput() throws IOException {
     super.handleMouseInput();
     int dWheel = Mouse.getEventDWheel();
-    if (dWheel != 0) {
-      mouseScrolled(Mouse.getEventX() * width / mc.displayWidth, height - Mouse.getEventY() * height / mc.displayHeight - 1, dWheel);
-    }
+    if (dWheel == 0) { return; }
+    mouseScrolled(Mouse.getEventX() * width / mc.displayWidth, height - Mouse.getEventY() * height / mc.displayHeight - 1, dWheel);
   }
   
   @Override
-  protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-    GL11.glPushMatrix();
-    mc.getTextureManager().bindTexture(ENCHANT_MOVER_GUI);
+  protected void drawGuiContainerBackgroundLayer(final float partialTicks, final int mouseX, final int mouseY) {
     GL11.glTranslated(drawX, drawY, 0);
+    mc.getTextureManager().bindTexture(ENCHANT_MOVER_GUI);
     drawTexturedModalRect(0, 0, 0, 0, xSize, ySize);
-    
     entryList.forEach(entry -> entry.draw(mc, mouseX - drawX, mouseY - drawY, partialTicks));
-    GL11.glPopMatrix();
+    GL11.glTranslated(-drawX, -drawY, 0);
   }
   
   @Override
-  protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-    super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+  protected void drawGuiContainerForegroundLayer(final int mouseX, final int mouseY) {
     fontRenderer.drawString(tile.getDisplayName().getUnformattedText(), 91, 119, 4210752);
     fontRenderer.drawString(inventoryPlayer.getDisplayName().getUnformattedText(), 91, 145, 4210752);
+    entryList.forEach(entry -> entry.drawText(mc, mouseX - drawX, mouseY - drawY));
   }
   
-  protected static class BasicButton extends EnderORGuiButton implements IHasHoveringText {
+  private static class BasicButton extends EnderORGuiButton implements IHasHoveringText {
     protected List<String> hoveringText = new ArrayList<>();
     
-    protected BasicButton(int buttonId, int x, int y, int iconX, int iconY) {
-      super(buttonId, x, y, 96, 238, iconX, iconY, 18, 18, ENCHANT_MOVER_GUI, ENCHANT_MOVER_GUI);
-      visible = true;
-      enabled = true;
+    protected BasicButton(int buttonId, int x, int y, int backgroundX, int backgroundY) {
+      super(buttonId, x, y, backgroundX, backgroundY, 18, 18, ENCHANT_MOVER_GUI);
     }
     
     @Override
@@ -150,13 +146,11 @@ public class GuiEnchantMover extends GuiContainer {
     
     @Override
     public void addHoveringText(@NotNull List<String> hoveringText) {
-      if (hovering) {
-        hoveringText.addAll(this.hoveringText);
-      }
+      if (hovering) { hoveringText.addAll(this.hoveringText); }
     }
   }
   
-  protected class ButtonRemoveAll extends BasicButton {
+  private class ButtonRemoveAll extends BasicButton {
     protected ButtonRemoveAll() {
       super(0, 47, 133, 0, 238);
       container.addListener(() -> {
@@ -173,7 +167,7 @@ public class GuiEnchantMover extends GuiContainer {
     }
   }
   
-  protected class ButtonMergeAll extends BasicButton {
+  private class ButtonMergeAll extends BasicButton {
     protected ButtonMergeAll() {
       super(1, 191, 133, 36, 238);
       container.addListener(() -> {
@@ -190,19 +184,18 @@ public class GuiEnchantMover extends GuiContainer {
     }
   }
   
-  protected abstract class BasicButtonList extends EnderORGuiBasic implements IHasHoveringText {
-    protected    List<EnchantButton> buttonList     = new ArrayList<>();
-    public final int                 enchantSlotId;
-    protected    EnchantButton       buttonReleased = null;
+  private abstract class BasicButtonList extends EnderORGuiBasic implements IHasHoveringText {
+    protected final List<EnchantButton> buttonList     = new ArrayList<>();
+    private final   ScrollBar           scrollBar      = new ScrollBar();
+    private final   int                 enchantSlotId;
+    private         EnchantButton       buttonReleased = null;
     
-    protected float   scrolledHeight   = 0F;
-    protected int     scrollableHeight = 0;
-    protected boolean hovering         = false;
+    private float   scrolledHeight   = 0F;
+    private int     scrollableHeight = 0;
+    private boolean hovering         = false;
     
-    
-    protected ScrollBar scrollBar = new ScrollBar();
-    
-    protected Map<Enchantment, Integer> enchants = new HashMap<>();
+    private int cutX;
+    private int cutY;
     
     public BasicButtonList(int id, int x, int y) {
       super(id, x, y, 119, 108);
@@ -211,39 +204,56 @@ public class GuiEnchantMover extends GuiContainer {
       enchantSlotId = id & 1;
     }
     
-    public abstract void afterButtonMouseReleased(Minecraft mc, int buttonId);
+    @Override
+    public void initGui() {
+      cutX = (drawX + x) * scale;
+      cutY = (GuiEnchantMover.this.height - height - drawY - y - 1) * scale + 4;
+    }
+    
+    protected abstract void afterButtonMouseReleased(Minecraft mc, int buttonId);
     
     protected void refreshButtons() {
       AtomicInteger i = new AtomicInteger();
       buttonList.clear();
-      enchants = container.getEnchantsInSlot(enchantSlotId);
-      enchants.forEach((enchant, level) -> {
+      container.getEnchantsInSlot(enchantSlotId).forEach((enchant, level) -> {
         buttonList.add(new EnchantButton(i.get(), 1, 1 + i.get() * 14, enchant, level));
         i.incrementAndGet();
       });
       scrollableHeight = Math.max(0, i.get() * 14 - height + 2);
+      scrolledHeight   = Math.min(scrolledHeight, scrollableHeight);
     }
     
     @Override
     public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
       hovering = isHovering(mc, mouseX, mouseY);
-      GL11.glPushMatrix();
       GL11.glTranslated(x, y, 0);
       scrollBar.draw(mc, mouseX - x, mouseY - y, partialTicks);
       GL11.glTranslated(0, -scrolledHeight, 0);
-      
       final boolean wasGlScissorEnabled = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
-      if (!wasGlScissorEnabled) { GL11.glEnable(GL11.GL_SCISSOR_TEST); }
-      
-      final int scale = getScaledResolution(mc).getScaleFactor();
-      GL11.glScissor((drawX + x) * scale, (GuiEnchantMover.this.height - height - drawY - y - 1) * scale + 4, width * scale, (height - 2) * scale);
+      GL11.glEnable(GL11.GL_SCISSOR_TEST);
+      GL11.glScissor(cutX, cutY, width * scale, (height - 2) * scale);
       
       int i = Math.max(0, Math.min((int) scrolledHeight / 14, buttonList.size() - 1));
       for (; i < buttonList.size() && i * 14 - scrolledHeight <= height - 2; ++i) {
         buttonList.get(i).draw(mc, mouseX - x, (int) (mouseY - y + scrolledHeight), partialTicks);
       }
       if (!wasGlScissorEnabled) { GL11.glDisable(GL11.GL_SCISSOR_TEST); }
-      GL11.glPopMatrix();
+      GL11.glTranslated(-x, scrolledHeight - y, 0);
+    }
+    
+    @Override
+    public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY) {
+      GL11.glTranslated(x, y - scrolledHeight, 0);
+      final boolean wasGlScissorEnabled = GL11.glIsEnabled(GL11.GL_SCISSOR_TEST);
+      GL11.glEnable(GL11.GL_SCISSOR_TEST);
+      GL11.glScissor(cutX, cutY, width * scale, (height - 2) * scale);
+      
+      int i = Math.max(0, Math.min((int) scrolledHeight / 14, buttonList.size() - 1));
+      for (; i < buttonList.size() && i * 14 - scrolledHeight <= height - 2; ++i) {
+        buttonList.get(i).drawText(mc, mouseX - x, (int) (mouseY - y + scrolledHeight));
+      }
+      if (!wasGlScissorEnabled) { GL11.glDisable(GL11.GL_SCISSOR_TEST); }
+      GL11.glTranslated(-x, scrolledHeight - y, 0);
     }
     
     @Override
@@ -260,7 +270,7 @@ public class GuiEnchantMover extends GuiContainer {
       scrollBar.mouseDragged(mc, mouseX - x, mouseY - y, state, duration);
       int i = Math.max(0, Math.min((int) scrolledHeight / 14, buttonList.size() - 1));
       for (; i < buttonList.size() && i * 14 - scrolledHeight <= height - 2; ++i) {
-        buttonList.get(i).draw(mc, mouseX - x, (int) (mouseY - y + scrolledHeight), duration);
+        buttonList.get(i).mouseDragged(mc, mouseX - x, (int) (mouseY - y + scrolledHeight), state, duration);
       }
     }
     
@@ -270,7 +280,7 @@ public class GuiEnchantMover extends GuiContainer {
       buttonReleased = null;
       int i = Math.max(0, Math.min((int) scrolledHeight / 14, buttonList.size() - 1));
       for (; i < buttonList.size() && i * 14 - scrolledHeight <= height - 2 && buttonReleased == null; ++i) {
-        buttonList.get(i).draw(mc, mouseX - x, (int) (mouseY - y + scrolledHeight), state);
+        buttonList.get(i).mouseReleased(mc, mouseX - x, (int) (mouseY - y + scrolledHeight), state);
       }
       if (buttonReleased != null) { afterButtonMouseReleased(mc, buttonReleased.id); }
     }
@@ -299,23 +309,17 @@ public class GuiEnchantMover extends GuiContainer {
       protected int     lastY;
       
       
-      public ScrollBar() {
-        super(0, 105, 0, 14, 108);
-      }
+      public ScrollBar() { super(0, 105, 0, 14, 108); }
       
       public void calcScroll() {
-        if (BasicButtonList.this.scrollableHeight == 0) {
-          scroll = 0;
-          return;
+        if (BasicButtonList.this.scrollableHeight == 0) { scroll = 0; } else {
+          scroll = scrolledHeight * scrollableHeight / BasicButtonList.this.scrollableHeight;
         }
-        scroll = scrolledHeight * scrollableHeight / BasicButtonList.this.scrollableHeight;
       }
       
       @Override
       public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
         if (!focusing) { calcScroll(); }
-        mc.getTextureManager().bindTexture(ENCHANT_MOVER_GUI);
-        
         dummyGui.drawTexturedModalRect(x + 1F, 1 + y + scroll, focusing ? 244 : 232, 241, childWith, childHeight);
       }
       
@@ -339,10 +343,7 @@ public class GuiEnchantMover extends GuiContainer {
       }
       
       @Override
-      public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) {
-        if (!focusing) { return; }
-        focusing = false;
-      }
+      public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) { focusing = false; }
     }
     
     protected class EnchantButton extends EnderORGuiButton implements IHasHoveringText {
@@ -371,11 +372,11 @@ public class GuiEnchantMover extends GuiContainer {
       @Override
       public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
         hovering = isHovering(mc, mouseX, mouseY);
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        mc.getTextureManager().bindTexture(ENCHANT_MOVER_GUI);
         dummyGui.drawTexturedModalRect(x, y, backgroundX, backgroundY, width, height);
+      }
+      
+      public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY) {
         dummyGui.drawString(mc.fontRenderer, enchantName, x + 4, y + (height - mc.fontRenderer.FONT_HEIGHT + 1) / 2, getTextColor());
-        GL11.glPopAttrib();
       }
       
       @Override
@@ -395,47 +396,43 @@ public class GuiEnchantMover extends GuiContainer {
     }
   }
   
-  protected class ButtonListRemove extends BasicButtonList {
-    public ButtonListRemove() {
-      super(2, 7, 7);
-    }
+  private class ButtonListRemove extends BasicButtonList {
+    public ButtonListRemove() { super(2, 7, 7); }
     
     @Override
-    public void afterButtonMouseReleased(Minecraft mc, int buttonId) {
+    protected void afterButtonMouseReleased(Minecraft mc, int buttonId) {
       EnchantButton button = buttonList.get(buttonId);
       removeEnchant(button.enchant);
     }
   }
   
-  protected class ButtonListMerge extends BasicButtonList {
-    public ButtonListMerge() {
-      super(3, 130, 7);
-    }
+  private class ButtonListMerge extends BasicButtonList {
+    public ButtonListMerge() { super(3, 130, 7); }
     
     @Override
-    public void afterButtonMouseReleased(Minecraft mc, int buttonId) {
+    protected void afterButtonMouseReleased(Minecraft mc, int buttonId) {
       EnchantButton button = buttonList.get(buttonId);
       mergeEnchant(button.enchant, button.level);
     }
   }
   
-  protected interface IHasHoveringText {
+  private interface IHasHoveringText {
     void addHoveringText(@NotNull List<String> hoveringText);
   }
   
-  protected void removeEnchants()                             { setEnchants0(Collections.emptyMap()); }
+  private void removeEnchants()                             { setEnchants0(Collections.emptyMap()); }
   
-  protected void mergeEnchants()                              { setEnchants0(EnchantsHelper.mergeEnchants(container.getEnchantsInSlot(0), container.getEnchantsInSlot(1))); }
+  private void mergeEnchants()                              { setEnchants0(EnchantsHelper.mergeEnchants(container.getEnchantsInSlot(0), container.getEnchantsInSlot(1))); }
   
-  protected void removeEnchant(Enchantment enchant)           { setEnchants0(EnchantsHelper.removeEnchant(container.getEnchantsInSlot(0), enchant)); }
+  private void removeEnchant(Enchantment enchant)           { setEnchants0(EnchantsHelper.removeEnchant(container.getEnchantsInSlot(0), enchant)); }
   
-  protected void mergeEnchant(Enchantment enchant, int level) { setEnchants0(EnchantsHelper.mergeEnchant(container.getEnchantsInSlot(0), enchant, level)); }
+  private void mergeEnchant(Enchantment enchant, int level) { setEnchants0(EnchantsHelper.mergeEnchant(container.getEnchantsInSlot(0), enchant, level)); }
   
-  protected void setEnchants0(Map<Enchantment, Integer> enchants) {
+  private void setEnchants0(Map<Enchantment, Integer> enchants) {
     container.setEnchants0(enchants);
     EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketContainerSlotChanged(CPacketContainerSlotChanged.ContainerType.ENCHANT_MOVER, 0, container.getSlot(0).getStack()));
   }
   
   @Contract ("_ -> new")
-  public static @NotNull ScaledResolution getScaledResolution(Minecraft mc) { return new ScaledResolution(mc); }
+  private static @NotNull ScaledResolution getScaledResolution(Minecraft mc) { return new ScaledResolution(mc); }
 }

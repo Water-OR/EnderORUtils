@@ -1,8 +1,6 @@
 package io.github.enderor.items;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.github.enderor.EnderORUtils;
 import io.github.enderor.client.utils.EnchantsHelperClient;
 import io.github.enderor.config.EnchantsMaxLevel;
 import io.github.enderor.recipes.EnderORRecipesHandler;
@@ -28,17 +26,13 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
+import java.util.*;
 
 public class ItemEnchantedPaper extends Item implements IHasRecipe {
   public ItemEnchantedPaper() {
     setMaxDamage(0);
     setMaxStackSize(1);
     EnderORItemHandler.addModel(this, 0, "inventory");
-    EnchantsMaxLevel.addListener(this::calcSubItems);
   }
   
   @Override
@@ -60,32 +54,22 @@ public class ItemEnchantedPaper extends Item implements IHasRecipe {
   @Override
   public @NotNull ItemStack getDefaultInstance() { return resetEnchant(new ItemStack(this, 1, 0)); }
   
-  private final List<ItemStack> subItemsAll     = Lists.newArrayList();
-  private final List<ItemStack> subItemsMax     = Lists.newArrayList();
-  private       boolean         isSubItemsReady = false;
-  
-  public void calcSubItems() {
-    if (!(EnchantsHelper.hasEnchantsInit() && EnchantsMaxLevel.hasConfigPrepared())) { return; }
-    subItemsMax.clear();
-    subItemsAll.clear();
-    subItemsAll.add(getDefaultInstance());
-    final Map<Enchantment, Integer> all_max_enchantment = Maps.newHashMap();
-    EnchantsHelper.getEnchantsAppeared().forEach(enchantment -> IntStream.rangeClosed(1, EnchantsMaxLevel.getMaxLevel(enchantment)).mapToObj(i -> setEnchant(getDefaultInstance(), enchantment, i)).forEachOrdered(subItemsAll::add));
-    EnchantsHelper.getEnchantsAppeared().forEach(enchantment -> subItemsMax.add(setEnchant(getDefaultInstance(), enchantment, EnchantsMaxLevel.getMaxLevel(enchantment))));
-    EnchantsHelper.getEnchantsAppeared().forEach(enchantment -> all_max_enchantment.put(enchantment, EnchantsMaxLevel.getMaxLevel(enchantment)));
-    subItemsAll.add(setEnchants(getDefaultInstance(), all_max_enchantment));
-    subItemsMax.add(setEnchants(getDefaultInstance(), all_max_enchantment));
-    isSubItemsReady = true;
-  }
-  
   @Override
   public void getSubItems(@NotNull CreativeTabs tab, @NotNull NonNullList<ItemStack> items) {
-    if (!isSubItemsReady) { calcSubItems(); }
-    if (tab.equals(EnderORUtils.MOD_TAB)) {
-      for (int i = 0, iMax = subItemsMax.size(); i < iMax; ++i) { items.add(subItemsMax.get(i));}
-    } else if (tab.equals(CreativeTabs.SEARCH)) {
-      for (int i = 0, iMax = subItemsAll.size(); i < iMax; ++i) { items.add(subItemsAll.get(i));}
+    if (!isInCreativeTab(tab)) { return; }
+    items.add(getDefaultInstance());
+    final SortedMap<Enchantment, Integer> maxLevels = Maps.newTreeMap(Comparator.comparingInt(Enchantment::getEnchantmentID));
+    final List<Enchantment>               enchants  = EnchantsHelper.getEnchantsAppeared();
+    enchants.sort(Comparator.comparingInt(Enchantment::getEnchantmentID));
+    
+    for (int i = 0, iMax = enchants.size(); i < iMax; ++i) {
+      Enchantment enchant = enchants.get(i);
+      for (int j = CreativeTabs.SEARCH.equals(tab) ? enchant.getMinLevel() : enchant.getMaxLevel(), jMax = EnchantsMaxLevel.getMaxLevel(enchant); j <= jMax; ++j) {
+        items.add(setEnchant(getDefaultInstance(), enchant, j));
+      }
+      EnchantsHelper.mergeEnchant(maxLevels, enchant, EnchantsMaxLevel.getMaxLevel(enchant));
     }
+    items.add(setEnchants(getDefaultInstance(), maxLevels));
   }
   
   @Override
