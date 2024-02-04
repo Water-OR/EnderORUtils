@@ -191,7 +191,7 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
     
     final List<PotionType> effectsMultiple = EffectHelper.getMultipleEffectsPotions();
     final Map<Potion, Integer> effectsIn = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
-    for (int i = 0, j, iMax = effectsMultiple.size(); i < iMax; ++i) {
+    for (int i = 0, iMax = effectsMultiple.size(); i < iMax; ++i) {
       effectsIn.clear();
       effectsMultiple.get(i).getEffects().forEach(effect -> EffectHelper.mergeEffect(effectsIn, effect));
       items.add(setEffects(getDefaultInstance(), effectsIn));

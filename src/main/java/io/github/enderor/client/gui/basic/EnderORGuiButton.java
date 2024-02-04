@@ -1,5 +1,6 @@
 package io.github.enderor.client.gui.basic;
 
+import io.github.enderor.client.utils.PlayerUtils;
 import io.github.enderor.utils.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
@@ -41,7 +42,7 @@ public class EnderORGuiButton extends EnderORGuiBasic {
     int                    drawX = drawP.getKey();
     int                    drawY = drawP.getValue();
     dummyGui.drawTexturedModalRect(x, y, drawX, drawY, width, height);
-    hovering = isHovering(mc, mouseX, mouseY);
+    hovering = isHovering(mouseX, mouseY);
     
     if (hasIcon) {
       if (autoBind) { mc.getTextureManager().bindTexture(icon); }
@@ -98,13 +99,14 @@ public class EnderORGuiButton extends EnderORGuiBasic {
     return 0xe0e0e0;
   }
   
-  public void drawText(@NotNull Minecraft mc, int mouseX, int mouseY) { }
+  @Override
+  public void mouseClicked(Minecraft mc, int mouseX, int mouseY, int state) {
+    mouseDragged(mc, mouseX, mouseY, state, 0);
+    if (focusing) { playPressSound(PlayerUtils.getMc().getSoundHandler()); }
+  }
   
   @Override
-  public void mouseClicked(Minecraft mc, int mouseX, int mouseY, int state) { mouseDragged(mc, mouseX, mouseY, state, 0); }
-  
-  @Override
-  public void mouseDragged(@NotNull Minecraft mc, int mouseX, int mouseY, int state, long duration) { focusing = isHovering(mc, mouseX, mouseY); }
+  public void mouseDragged(@NotNull Minecraft mc, int mouseX, int mouseY, int state, long duration) { focusing = isHovering(mouseX, mouseY); }
   
   @Override
   public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) { focusing = false; }

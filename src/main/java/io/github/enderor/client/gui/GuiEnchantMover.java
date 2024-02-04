@@ -162,7 +162,7 @@ public class GuiEnchantMover extends GuiContainer {
     @Override
     public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) {
       super.mouseReleased(mc, mouseX, mouseY, state);
-      if (!isHovering(mc, mouseX, mouseY)) { return; }
+      if (!isHovering(mouseX, mouseY)) { return; }
       removeEnchants();
     }
   }
@@ -179,7 +179,7 @@ public class GuiEnchantMover extends GuiContainer {
     @Override
     public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) {
       super.mouseReleased(mc, mouseX, mouseY, state);
-      if (!isHovering(mc, mouseX, mouseY)) { return; }
+      if (!isHovering(mouseX, mouseY)) { return; }
       mergeEnchants();
     }
   }
@@ -225,7 +225,7 @@ public class GuiEnchantMover extends GuiContainer {
     
     @Override
     public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-      hovering = isHovering(mc, mouseX, mouseY);
+      hovering = isHovering(mouseX, mouseY);
       GL11.glTranslated(x, y, 0);
       scrollBar.draw(mc, mouseX - x, mouseY - y, partialTicks);
       GL11.glTranslated(0, -scrolledHeight, 0);
@@ -287,7 +287,7 @@ public class GuiEnchantMover extends GuiContainer {
     
     @Override
     public void mouseScrolled(Minecraft mc, int mouseX, int mouseY, int scroll) {
-      if (isHovering(mc, mouseX, mouseY)) {
+      if (isHovering(mouseX, mouseY)) {
         if (isShiftKeyDown()) { scroll *= 7; }
         scrolledHeight = Math.max(0, Math.min(scrolledHeight - scroll * 2 / 120F, scrollableHeight));
       }
@@ -325,7 +325,7 @@ public class GuiEnchantMover extends GuiContainer {
       
       @Override
       public void mouseClicked(Minecraft mc, int mouseX, int mouseY, int state) {
-        if (!isHovering(mc, mouseX, mouseY)) { return; }
+        if (!isHovering(mouseX, mouseY)) { return; }
         if (mouseY < scroll + 1 || scroll + 1 + childHeight <= mouseY) {
           scroll = Math.max(0, Math.min(mouseY - childHeight / 2, scrollableHeight));
         }
@@ -371,7 +371,7 @@ public class GuiEnchantMover extends GuiContainer {
       
       @Override
       public void draw(@NotNull Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-        hovering = isHovering(mc, mouseX, mouseY);
+        hovering = isHovering(mouseX, mouseY);
         dummyGui.drawTexturedModalRect(x, y, backgroundX, backgroundY, width, height);
       }
       
@@ -382,7 +382,7 @@ public class GuiEnchantMover extends GuiContainer {
       @Override
       public void mouseReleased(Minecraft mc, int mouseX, int mouseY, int state) {
         super.mouseReleased(mc, mouseX, mouseY, state);
-        if (!isHovering(mc, mouseX, mouseY)) { return; }
+        if (!isHovering(mouseX, mouseY)) { return; }
         buttonReleased = this;
       }
       
@@ -392,7 +392,7 @@ public class GuiEnchantMover extends GuiContainer {
       }
       
       @Override
-      public boolean isHovering(Minecraft mc, int mouseX, int mouseY) { return BasicButtonList.this.hovering && super.isHovering(mc, mouseX, mouseY); }
+      public boolean isHovering(int mouseX, int mouseY) { return BasicButtonList.this.hovering && super.isHovering(mouseX, mouseY); }
     }
   }
   

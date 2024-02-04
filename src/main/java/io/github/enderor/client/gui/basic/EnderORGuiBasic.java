@@ -41,5 +41,5 @@ public abstract class EnderORGuiBasic {
     soundHandlerIn.playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
   }
   
-  public boolean isHovering(Minecraft mc, int mouseX, int mouseY) { return enabled && visible && mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height; }
+  public boolean isHovering(int mouseX, int mouseY) { return enabled && visible && mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height; }
 }

@@ -6,14 +6,12 @@ import io.github.enderor.blocks.EnderORBlockHandler;
 import io.github.enderor.items.EnderORItemHandler;
 import io.github.enderor.items.ItemEnchantedPaper;
 import io.github.enderor.items.baubles.ring.ItemPotionRing;
-import io.github.enderor.recipes.EnderORRecipe;
 import io.github.enderor.recipes.EnderORRecipesHandler;
 import io.github.enderor.utils.NullHelper;
 import mezz.jei.api.*;
 import mezz.jei.api.ingredients.IModIngredientRegistration;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
-import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
@@ -22,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @JEIPlugin
 public class EnderORJEIPlugin implements IModPlugin {

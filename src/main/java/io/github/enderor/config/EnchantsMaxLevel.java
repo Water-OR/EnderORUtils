@@ -1,25 +1,21 @@
 package io.github.enderor.config;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.github.enderor.utils.EnchantsHelper;
 import io.github.enderor.utils.NullHelper;
-import io.github.enderor.utils.actions.ActionNoIO;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class EnchantsMaxLevel {
-  private static final Configuration              config          = new Configuration(new File("enchantments_max_level", "config.cfg"));
-  private static       boolean                    configPrepared  = false;
-  private static final String                     CONFIG_CATEGORY = "enchantments_max_level";
-  private static final Map<Enchantment, Integer>  MAX_LEVEL       = Maps.newHashMap();
+  private static final Configuration             config          = new Configuration(new File("enchantments_max_level", "config.cfg"));
+  private static       boolean                   configPrepared  = false;
+  private static final String                    CONFIG_CATEGORY = "enchantments_max_level";
+  private static final Map<Enchantment, Integer> MAX_LEVEL       = Maps.newHashMap();
   
   public static int getMaxLevel(Enchantment enchant) { return MAX_LEVEL.get(enchant); }
   
