@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-// TODO: Let it don't throw `ConcurrentModificationException` when it works with Ender IO `DirectUpgrade`
 public class EnchantmentLongSword extends Enchantment {
   protected EnchantmentLongSword(String name) {
     super(Rarity.COMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[] { EntityEquipmentSlot.MAINHAND, EntityEquipmentSlot.OFFHAND });
