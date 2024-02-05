@@ -2,6 +2,7 @@ package io.github.enderor.network.server;
 
 import io.github.enderor.EnderORUtils;
 import io.github.enderor.containers.ContainerEnchantMover;
+import io.github.enderor.enchantments.EnchantmentLongSword;
 import io.github.enderor.network.IPacketHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -76,5 +77,13 @@ public class ServerPacketHandler implements IPacketHandler {
     
     @Override
     public boolean attackEntityFromPart(@NotNull MultiPartEntityPart part, @NotNull DamageSource source, float damage) { return false; }
+  }
+  
+  public void progressPlayerNotInCoolDown(@NotNull CPacketPlayerNotInCoolDown packet) {
+    if (packet.newState) {
+      EnchantmentLongSword.playersNotInCoolDown.add(playerMP);
+    } else {
+      EnchantmentLongSword.playersNotInCoolDown.remove(playerMP);
+    }
   }
 }

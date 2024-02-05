@@ -92,6 +92,10 @@ repositories {
       includeGroup 'curse.maven'
     }
   }
+  maven {
+    name 'I Don\'t know'
+    url 'https://maven.tterrag.com/'
+  }
   mavenLocal() // Must be last for caching to work
 }
 
@@ -109,6 +113,10 @@ dependencies {
   implementation rfg.deobf('curse.maven:had-enough-items-557549:4810661')
   implementation rfg.deobf('curse.maven:baubles-227083:2518667')
   implementation('curse.maven:enchantment-descriptions-250419:2689502-deobf-2689505-sources-2689503')
+  implementation rfg.deobf("com.enderio.core:EnderCore:${project.minecraft.version}-${project.ender_core_version}")
+  implementation("com.enderio:EnderIO:${project.minecraft.version}-${project.ender_IO_version}") { transitive = false }
+  implementation("info.loenwind.autoconfig:AutoConfig:+")
+  implementation("info.loenwind.autosave:AutoSave:1.12.2-+")
 //  implementation('curse.maven:endercore-231868:4671384')
 //  implementation('curse.maven:ender-io-64578:4674244')
 //  implementation ('curse.maven:bookshelf-228525:2836960-deobf-2836962-sources-2836961')

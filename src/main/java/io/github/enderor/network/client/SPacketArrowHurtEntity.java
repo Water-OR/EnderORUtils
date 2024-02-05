@@ -12,15 +12,13 @@ public class SPacketArrowHurtEntity implements IEnderORPacket<ClientPacketHandle
   }
   
   @Override
-  public int getId() {
-    return 0;
-  }
+  public int getId() { return 0; }
   
   @Override
   public void read(@NotNull PacketBuffer bufIn) throws IOException { }
   
   @Override
-  public void write(PacketBuffer bufOut) throws IOException { }
+  public void write(@NotNull PacketBuffer bufOut) throws IOException { }
   
   @Override
   public void progress(@NotNull ClientPacketHandler packetHandler) {

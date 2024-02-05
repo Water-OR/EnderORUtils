@@ -4,6 +4,8 @@ import baubles.api.BaubleType;
 import baubles.api.IBauble;
 import baubles.api.cap.BaublesCapabilities;
 import baubles.api.cap.BaublesContainer;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.enderor.items.EnderORItemHandler;
 import io.github.enderor.recipes.EnderORRecipesHandler;
@@ -22,16 +24,21 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-public class ItemMagneticRing extends Item implements IBauble, IHasRecipe {
+public class ItemMagneticRing extends Item implements IBauble, IHasRecipe, ITickable {
+  private static final Map<EntityPlayer, List<EntityItem>> itemsNeedToPickUpByPlayer = Maps.newHashMap();
+  private static final List<EntityPlayer>                  deadPlayers               = Lists.newArrayList();
+  
   public ItemMagneticRing() {
     setMaxDamage(0);
     setMaxStackSize(1);
@@ -44,15 +51,14 @@ public class ItemMagneticRing extends Item implements IBauble, IHasRecipe {
   @Override
   public void onWornTick(ItemStack itemstack, @NotNull EntityLivingBase player) {
     if (!(player instanceof EntityPlayer)) { return; }
-    AxisAlignedBB boxAABB  = player.getEntityBoundingBox().grow(1D, .5, 1D);
+    AxisAlignedBB boxAABB  = player.getEntityBoundingBox();
     final boolean isRiding = player.isRiding() && !NullHelper.checkNull(player.getRidingEntity()).isDead;
     
     if (isRiding) { boxAABB = player.getEntityBoundingBox().union(player.getRidingEntity().getEntityBoundingBox()); }
-    Set<EntityItem> itemList = Sets.newHashSet(player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, boxAABB.grow(1D, isRiding ? 0D : .5, 1D)));
-    player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, player.getEntityBoundingBox().grow(3D, 1D, 3D)).forEach(item -> {
-      if (item.getItem().isEmpty() || item.cannotPickup() || itemList.contains(item)) { return; }
-      item.onCollideWithPlayer((EntityPlayer) player);
-    });
+    Set<EntityItem> itemSet = Sets.newHashSet(player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, boxAABB.grow(1D, isRiding ? 0D : .5, 1D)));
+    player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, player.getEntityBoundingBox().grow(3D, 1D, 3D))
+          .stream().filter(item -> !item.getItem().isEmpty()).filter(item -> !item.cannotPickup()).filter(item -> !itemSet.contains(item))
+          .forEach(entityItem -> itemsNeedToPickUpByPlayer.computeIfAbsent((EntityPlayer) player, k -> Lists.newArrayList()).add(entityItem));
   }
   
   @Override
@@ -88,5 +94,17 @@ public class ItemMagneticRing extends Item implements IBauble, IHasRecipe {
   @Override
   public void addInformation(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<String> tooltip, @NotNull ITooltipFlag flagIn) {
     tooltip.add(I18n.format(getUnlocalizedNameInefficiently(stack) + ".description").trim());
+  }
+  
+  @Override
+  public void update() {
+    itemsNeedToPickUpByPlayer.forEach((player, items) -> {
+      if (player.isDead) { deadPlayers.add(player); } else {
+        items.stream().filter(item -> !item.isDead).forEach(item -> item.onCollideWithPlayer(player));
+        items.clear();
+      }
+    });
+    deadPlayers.forEach(itemsNeedToPickUpByPlayer::remove);
+    deadPlayers.clear();
   }
 }

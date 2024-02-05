@@ -4,11 +4,11 @@ import com.google.common.collect.Sets;
 import io.github.enderor.attribute.EnderORAttributes;
 import io.github.enderor.network.EnderORNetworkHandler;
 import io.github.enderor.network.server.CPacketPlayerAttackMob;
+import io.github.enderor.network.server.CPacketPlayerNotInCoolDown;
 import io.github.enderor.utils.CalculateHelper;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnumEnchantmentType;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.EntityEquipmentSlot;
@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
+// TODO: Let it don't throw `ConcurrentModificationException` when it works with Ender IO `DirectUpgrade`
 public class EnchantmentLongSword extends Enchantment {
   protected EnchantmentLongSword(String name) {
     super(Rarity.COMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[] { EntityEquipmentSlot.MAINHAND, EntityEquipmentSlot.OFFHAND });
@@ -37,44 +38,39 @@ public class EnchantmentLongSword extends Enchantment {
   @Override
   public int getMaxEnchantability(int enchantmentLevel) { return getMinEnchantability(enchantmentLevel); }
   
-  public static final Set<EntityLivingBase> entityWouldAttack = Sets.newHashSet();
-  private static      boolean               wasNotInCoolDown  = false;
-  public static       int                   _ticksSinceLastSwing;
+  public static final Set<EntityLivingBase> entityWouldAttack    = Sets.newHashSet();
+  public static final Set<EntityPlayer>     playersNotInCoolDown = Sets.newHashSet();
+  
+  public static  int     _ticksSinceLastSwing;
   
   public static boolean onLeftClick(@NotNull EntityPlayer player) { return onLeftClick(player, false); }
   
   public static boolean onLeftClick(@NotNull EntityPlayer player, boolean flag) {
     if (canNotActive(player)) { return false; }
-    wasNotInCoolDown = player.getCooldownPeriod() > .5F;
     final int ticksSinceLastSwing = flag ? _ticksSinceLastSwing : player.ticksSinceLastSwing;
-    double swingRange             = getSwingRange(player);
-    final double reach            = player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).getAttributeValue();
-    double l                      = player.rotationYaw - swingRange;
-    double r                      = player.rotationYaw + swingRange;
+    player.ticksSinceLastSwing = ticksSinceLastSwing;
+    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(player.getCooledAttackStrength(0F) >= 1F));
+    final double swingRange = getSwingRange(player);
+    final double reach      = player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).getAttributeValue();
+    double       l          = player.rotationYaw - swingRange;
+    double       r          = player.rotationYaw + swingRange;
     for (; l < 0; l += 360D) { r += 360D; }
     final double finalL = l;
     final double finalR = r;
-    for (Entity entity : player.getEntityWorld().loadedEntityList) {
-      if (player == entity) { continue; }
-      if (!player.canEntityBeSeen(entity)) { continue; }
-      if (!(player.getDistanceSq(entity) <= reach * reach)) { continue; }
-      if (!(entity instanceof EntityLivingBase) || entity instanceof EntityPlayer) { continue; }
-      if (entity.isDead) { continue; }
-      double angle = CalculateHelper.getAngle(entity.posX - player.posX, entity.posZ - player.posZ) - 90D;
-      while (angle < finalL) { angle += 360D; }
-      if (angle > finalR) { continue; }
-      entityWouldAttack.add((EntityLivingBase) entity);
-    }
-    final boolean isRemote = player.getEntityWorld().isRemote;
+    player.getEntityWorld().getEntities(EntityLivingBase.class, player::canEntityBeSeen).stream().filter(entity -> player != entity)
+          .filter(entity -> player.getDistanceSq(entity) <= reach * reach).filter(entity -> !(entity instanceof EntityPlayer))
+          .filter(entity -> !entity.isDead).filter(entity -> {
+            double angle = CalculateHelper.getAngle(entity.posX - player.posX, entity.posZ - player.posZ) - 90D;
+            while (angle < finalL) { angle += 360D; }
+            return angle < finalR;
+          }).forEach(entityWouldAttack::add);
     for (EntityLivingBase entityLivingBase : entityWouldAttack) {
       player.ticksSinceLastSwing = ticksSinceLastSwing;
-      if (isRemote) {
-        EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerAttackMob(ticksSinceLastSwing, entityLivingBase));
-      }
+      EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerAttackMob(ticksSinceLastSwing, entityLivingBase));
     }
     player.resetCooldown();
     entityWouldAttack.clear();
-    wasNotInCoolDown = false;
+    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(false));
     return true;
   }
   
@@ -95,25 +91,32 @@ public class EnchantmentLongSword extends Enchantment {
   @Mod.EventBusSubscriber
   public static class EventHandler {
     @SubscribeEvent (priority = EventPriority.HIGHEST)
-    public static void onEvent(PlayerInteractEvent.@NotNull LeftClickEmpty event) { onLeftClick(event.getEntityPlayer(), true); }
+    public static void onEvent(PlayerInteractEvent.@NotNull LeftClickEmpty event) {
+      if (event.getWorld().isRemote) {
+        onLeftClick(event.getEntityPlayer(), true);
+      }
+    }
     
     @SubscribeEvent (priority = EventPriority.HIGHEST)
-    public static void onEvent(PlayerInteractEvent.@NotNull LeftClickBlock event) { onLeftClick(event.getEntityPlayer()); }
+    public static void onEvent(PlayerInteractEvent.@NotNull LeftClickBlock event) {
+      if (event.getWorld().isRemote) {
+        onLeftClick(event.getEntityPlayer());
+      }
+    }
     
     @SubscribeEvent (priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void onEvent(@NotNull AttackEntityEvent event) {
-      if (!event.getEntity().getEntityWorld().isRemote || !(event.getTarget() instanceof EntityLivingBase) || entityWouldAttack.contains((EntityLivingBase) event.getTarget())) {
-        return;
-      }
-      if (onLeftClick(event.getEntityPlayer())) {
+      if (event.getEntity().getEntityWorld().isRemote && event.getTarget() instanceof EntityLivingBase &&
+          !entityWouldAttack.contains((EntityLivingBase) event.getTarget()) && onLeftClick(event.getEntityPlayer())) {
         event.setCanceled(true);
       }
     }
     
     @SubscribeEvent (priority = EventPriority.LOWEST)
     public static void onEvent(@NotNull CriticalHitEvent event) {
-      if (event.getTarget() instanceof EntityLivingBase && entityWouldAttack.contains(((EntityLivingBase) event.getTarget())) && wasNotInCoolDown) {
-        event.setDamageModifier(event.getDamageModifier() + .2F);
+      if (!event.getEntity().getEntityWorld().isRemote && event.getTarget() instanceof EntityLivingBase &&
+          playersNotInCoolDown.contains(event.getEntityPlayer())) {
+        event.setDamageModifier(event.getDamageModifier() * 1.2F);
       }
     }
   }

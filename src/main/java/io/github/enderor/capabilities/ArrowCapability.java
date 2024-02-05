@@ -1,5 +1,6 @@
 package io.github.enderor.capabilities;
 
+import com.google.common.collect.Lists;
 import io.github.enderor.EnderORUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.EntityArrow;
@@ -16,6 +17,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class ArrowCapability implements IArrowCapability {
   private boolean disappearAfterLanded = false;
@@ -96,14 +99,15 @@ public class ArrowCapability implements IArrowCapability {
     @SubscribeEvent
     public static void onEvent(TickEvent.@NotNull WorldTickEvent event) {
       if (event.phase != TickEvent.Phase.START) { return; }
-      event.world.loadedEntityList.forEach(entity -> {
-        if (!(entity instanceof EntityArrow && ((EntityArrow) entity).inGround && entity.hasCapability(Provider.ARROW_CAPABILITY, null))) { return ; }
-        if (entity.getCapability(Provider.ARROW_CAPABILITY, null).getDisappearAfterLanded()) { entity.setDead(); }
-      });
+      final List<Entity> arrows = Lists.newArrayList();
+      event.world.getEntities(EntityArrow.class, entity -> entity.inGround).stream()
+                 .filter(entity -> entity.hasCapability(Provider.ARROW_CAPABILITY, null))
+                 .filter(entity -> entity.getCapability(Provider.ARROW_CAPABILITY, null).getDisappearAfterLanded()).forEach(arrows::add);
+      arrows.forEach(Entity::setDead);
     }
     
     @SubscribeEvent
-    public static void onEvent(AttachCapabilitiesEvent<Entity> event) {
+    public static void onEvent(@NotNull AttachCapabilitiesEvent<Entity> event) {
       if (!(event.getObject() instanceof EntityArrow) || event.getObject().hasCapability(Provider.ARROW_CAPABILITY, null)) { return; }
       event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, Provider.ARROW_CAPABILITY.getDefaultInstance().getName()), new Provider());
     }

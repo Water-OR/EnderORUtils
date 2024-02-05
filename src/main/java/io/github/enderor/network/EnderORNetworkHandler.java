@@ -6,7 +6,9 @@ import io.github.enderor.network.client.SPacketArrowHurtEntity;
 import io.github.enderor.network.client.SPacketEnchantMaxLevelChange;
 import io.github.enderor.network.server.CPacketContainerSlotChanged;
 import io.github.enderor.network.server.CPacketPlayerAttackMob;
+import io.github.enderor.network.server.CPacketPlayerNotInCoolDown;
 import io.github.enderor.network.server.ServerPacketHandler;
+import io.github.enderor.utils.ExceptionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
@@ -69,7 +71,11 @@ public enum EnderORNetworkHandler {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    packet.progress(clientPacketHandler.setPlayerSP(player).setWorldClient(Minecraft.getMinecraft().world));
+    try {
+      packet.progress(clientPacketHandler.setPlayerSP(player).setWorldClient(Minecraft.getMinecraft().world));
+    } catch (Exception e) {
+      ExceptionUtils.print(e.fillInStackTrace());
+    }
   }
   
   private void decodeServerPacket(@NotNull ByteBuf buf, EntityPlayerMP player) {
@@ -85,7 +91,11 @@ public enum EnderORNetworkHandler {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    packet.progress(serverPacketHandler.setPlayerMP(player).setWorldServer(player.getServerWorld()));
+    try {
+      packet.progress(serverPacketHandler.setPlayerMP(player).setWorldServer(player.getServerWorld()));
+    } catch (Exception e) {
+      ExceptionUtils.print(e.fillInStackTrace());
+    }
   }
   
   @Contract ("_ -> new")
@@ -113,7 +123,7 @@ public enum EnderORNetworkHandler {
   private static final Map<Integer, IEnderORPacket<ServerPacketHandler>> packetsServer = new HashMap<>();
   private static final Map<Integer, IEnderORPacket<ClientPacketHandler>> packetsClient = new HashMap<>();
   
-  public static void addClientPacket(@NotNull IEnderORPacket<ClientPacketHandler> dummyPacket) {
+  private static void addClientPacket(@NotNull IEnderORPacket<ClientPacketHandler> dummyPacket) {
     if (packetsClient.containsKey(dummyPacket.getId())) {
       EnderORUtils.log(Level.WARN, "Duplicate client packet! id {} is already used!", dummyPacket.getId());
       return;
@@ -121,7 +131,7 @@ public enum EnderORNetworkHandler {
     packetsClient.put(dummyPacket.getId(), dummyPacket);
   }
   
-  public static void addServerPacket(@NotNull IEnderORPacket<ServerPacketHandler> dummyPacket) {
+  private static void addServerPacket(@NotNull IEnderORPacket<ServerPacketHandler> dummyPacket) {
     if (packetsServer.containsKey(dummyPacket.getId())) {
       EnderORUtils.log(Level.WARN, "Duplicate server packet! id {} is already used!", dummyPacket.getId());
       return;
@@ -132,6 +142,7 @@ public enum EnderORNetworkHandler {
   static {
     addServerPacket(new CPacketContainerSlotChanged());
     addServerPacket(new CPacketPlayerAttackMob());
+    addServerPacket(new CPacketPlayerNotInCoolDown());
     addClientPacket(new SPacketArrowHurtEntity());
     addClientPacket(new SPacketEnchantMaxLevelChange());
   }
