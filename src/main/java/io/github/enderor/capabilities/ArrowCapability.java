@@ -114,11 +114,9 @@ public class ArrowCapability implements IArrowCapability {
     }
     
     @SubscribeEvent
-    public static void onEvent(@NotNull AttachCapabilitiesEvent<Entity> event) {
+    public static void onEvent(@NotNull AttachCapabilitiesEvent<EntityArrow> event) {
       if (event.getObject().hasCapability(Provider.ARROW_CAPABILITY, null)) { return; }
-      if (event.getObject() instanceof EntityArrow) {
-        event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, NullHelper.checkNull(Provider.ARROW_CAPABILITY.getDefaultInstance()).getName()), new Provider());
-      }
+      event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, NullHelper.checkNull(Provider.ARROW_CAPABILITY.getDefaultInstance()).getName()), new Provider());
     }
   }
 }

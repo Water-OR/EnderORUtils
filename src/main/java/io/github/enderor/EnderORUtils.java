@@ -2,6 +2,8 @@ package io.github.enderor;
 
 import io.github.enderor.capabilities.ArrowCapability;
 import io.github.enderor.capabilities.IArrowCapability;
+import io.github.enderor.capabilities.IPlayerCapability;
+import io.github.enderor.capabilities.PlayerCapability;
 import io.github.enderor.command.EnderORCommandHandler;
 import io.github.enderor.items.EnderORCreativeTab;
 import io.github.enderor.network.EnderORGuiHandler;
@@ -60,6 +62,7 @@ public class EnderORUtils {
     log(Level.WARN, "====================================");
     NetworkRegistry.INSTANCE.registerGuiHandler(this, EnderORGuiHandler.INSTANCE);
     CapabilityManager.INSTANCE.register(IArrowCapability.class, new ArrowCapability.Storage(), ArrowCapability::new);
+    CapabilityManager.INSTANCE.register(IPlayerCapability.class, new PlayerCapability.Storage(), PlayerCapability::new);
   }
   
   @Mod.EventHandler

@@ -9,12 +9,14 @@ enchantment.enderor.long_sword.desc=It's a long sword
 itemGroup.enderor_items=Ender OR Utils
 
 item.item_mod.name=Mod Item
+item.slime_link.name=Slime Link
 item.potion_ring.name.single=Ring of "%s" potion
 item.potion_ring.name.multiple=Ring of Multiple potions
 item.potion_ring.name=Ring of potion
 item.magnetic_ring.name=Magnetic Ring
 item.enchanted_paper.name=Enchanted Paper
 
+item.slime_link.description=It's wet and sticky, but can avoid you from know back!
 item.potion_ring.empty.description=Craft with an potion
 item.potion_ring.filled.description=Wear it to get the effect
 item.magnetic_ring.description=Pick up items in 3 1 3 range!
@@ -30,7 +32,7 @@ config.enderor.client=Client
 config.enderor.client.enable_hit_box=Enable Hit Box (Different from F3 + B)
 config.enderor.client.hit_box_color=Hit Box Color
 config.enderor.client.hit_box_width=Hit Box Width (Border)
-config.enderor.client.enable_arrow_hurt_entity_sound=Enable Arrow Hurt Entity Sound (Same as u hurt a player)
+config.enderor.client.enable_arrow_hurt_entity_sound=Enable Arrow Hurt Entity Sound (Same as you hurt a player)
 config.enderor.client.enable_swing_range=Enable Swing Range Display
 config.enderor.client.swing_range_border_color=Swing Range Border Color
 config.enderor.client.swing_range_border_width=Swing Range Border Width
