@@ -72,9 +72,7 @@ public class EnderORUtils {
   public void onPostInit(FMLPostInitializationEvent event) { }
   
   @Mod.EventHandler
-  public void onServerStarting(FMLServerStartingEvent event) {
-    EnderORCommandHandler.INSTANCE.register(event);
-  }
+  public void onServerStarting(FMLServerStartingEvent event) { EnderORCommandHandler.INSTANCE.register(event); }
   
   public static void log(Level level, Object message)                { logger.log(level, message); }
   

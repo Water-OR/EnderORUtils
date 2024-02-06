@@ -1,13 +1,10 @@
 package io.github.enderor.network.client;
 
 import io.github.enderor.network.IEnderORPacket;
-import io.github.enderor.network.WrongPacketException;
 import io.github.enderor.utils.NullHelper;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
 
 public class SPacketEnchantMaxLevelChange implements IEnderORPacket<ServerPacketsHandler> {
   public Enchantment enchantment;
@@ -24,17 +21,14 @@ public class SPacketEnchantMaxLevelChange implements IEnderORPacket<ServerPacket
   public int getId() { return 1; }
   
   @Override
-  public void read(@NotNull PacketBuffer bufIn) throws IOException {
+  public void read(@NotNull PacketBuffer bufIn) {
     String enchantName = bufIn.readString(bufIn.readableBytes());
     enchantment = Enchantment.getEnchantmentByLocation(enchantName);
-    if (enchantment == null) {
-      throw new WrongPacketException("Receive packet with unregistered enchant \"%s\"", enchantName);
-    }
-    maxLevel = bufIn.readInt();
+    maxLevel    = bufIn.readInt();
   }
   
   @Override
-  public void write(@NotNull PacketBuffer bufOut) throws IOException {
+  public void write(@NotNull PacketBuffer bufOut) {
     bufOut.writeString(NullHelper.getRegistryNameString(enchantment));
     bufOut.writeInt(maxLevel);
   }

@@ -17,7 +17,6 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
@@ -69,12 +68,15 @@ public enum EnderORNetworkHandler {
     try {
       packet.read(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in reading packet {} from buffer", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
     try {
       packet.progress(serverPacketsHandler.setPlayerSP(player).setWorldClient(Minecraft.getMinecraft().world));
     } catch (Exception e) {
-      ExceptionUtils.print(e.fillInStackTrace());
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
   }
   
@@ -89,12 +91,15 @@ public enum EnderORNetworkHandler {
     try {
       packet.read(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in reading packet {} from buffer", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
     try {
       packet.progress(clientPacketsHandler.setPlayerMP(player).setWorldServer(player.getServerWorld()));
     } catch (Exception e) {
-      ExceptionUtils.print(e.fillInStackTrace());
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
   }
   
@@ -105,7 +110,10 @@ public enum EnderORNetworkHandler {
     try {
       packet.write(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in writing packet {} to buffer!", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
     return new FMLProxyPacket(buffer, channelName);
   }

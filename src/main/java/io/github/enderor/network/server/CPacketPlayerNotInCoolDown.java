@@ -4,12 +4,10 @@ import io.github.enderor.network.IEnderORPacket;
 import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
 public class CPacketPlayerNotInCoolDown implements IEnderORPacket<ClientPacketsHandler> {
   public boolean newState;
   
-  public CPacketPlayerNotInCoolDown() { }
+  public CPacketPlayerNotInCoolDown()                 { }
   
   public CPacketPlayerNotInCoolDown(boolean newState) { this.newState = newState; }
   
@@ -17,12 +15,12 @@ public class CPacketPlayerNotInCoolDown implements IEnderORPacket<ClientPacketsH
   public int getId() { return 2; }
   
   @Override
-  public void read(@NotNull PacketBuffer bufIn) throws IOException {
+  public void read(@NotNull PacketBuffer bufIn) {
     newState = bufIn.readBoolean();
   }
   
   @Override
-  public void write(@NotNull PacketBuffer bufOut) throws IOException {
+  public void write(@NotNull PacketBuffer bufOut) {
     bufOut.writeBoolean(newState);
   }
   

@@ -1,19 +1,15 @@
 package io.github.enderor.network.server;
 
 import io.github.enderor.EnderORUtils;
-import io.github.enderor.config.EnderORConfigs;
 import io.github.enderor.containers.ContainerEnchantMover;
 import io.github.enderor.enchantments.EnchantmentLongSword;
 import io.github.enderor.network.IPacketHandler;
-import io.github.enderor.utils.NullHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityMultiPart;
 import net.minecraft.entity.MultiPartEntityPart;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -34,7 +30,7 @@ public class ClientPacketsHandler implements IPacketHandler {
   
   public ClientPacketsHandler setWorldServer(WorldServer worldServer) {
     this.worldServer = worldServer;
-    dummyPart = new MultiPartEntityPart(new DummyMultiPart(), "", 0, 0);
+    dummyPart        = new MultiPartEntityPart(new DummyMultiPart(), "", 0, 0);
     return this;
   }
   
@@ -63,14 +59,14 @@ public class ClientPacketsHandler implements IPacketHandler {
     playerMP.ticksSinceLastSwing = packet.tickSinceLastSwing;
     playerMP.attackTargetEntityWithCurrentItem(entity);
     if (entity instanceof IEntityMultiPart) {
-      Class<? extends Entity> clazz = entity.getClass();
+      Class<? extends Entity> clazz  = entity.getClass();
       Field[]                 fields = clazz.getFields();
       for (Field field : fields) {
         if (field.getType().isAssignableFrom(MultiPartEntityPart.class)) {
           try {
             field.setAccessible(true);
             playerMP.attackTargetEntityWithCurrentItem(((MultiPartEntityPart) field.get(dummyPart)));
-          } catch (Exception ignored) {}
+          } catch (Exception ignored) { }
         }
       }
     }

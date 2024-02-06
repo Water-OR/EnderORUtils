@@ -3,7 +3,6 @@ package io.github.enderor.config;
 import io.github.enderor.EnderORUtils;
 import io.github.enderor.network.EnderORNetworkHandler;
 import io.github.enderor.network.client.SPacketConfigSync;
-import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;

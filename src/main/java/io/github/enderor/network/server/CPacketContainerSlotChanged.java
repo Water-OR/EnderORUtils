@@ -8,7 +8,10 @@ import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CPacketContainerSlotChanged implements IEnderORPacket<ClientPacketsHandler> {
   public CPacketContainerSlotChanged() { }
@@ -17,13 +20,10 @@ public class CPacketContainerSlotChanged implements IEnderORPacket<ClientPackets
   int           slot;
   ItemStack     stack;
   
-  public static final String TAG_SLOT  = "slot";
-  public static final String TAG_STACK = "stack";
-  
   public CPacketContainerSlotChanged(ContainerType type, int slot, ItemStack stack) {
     containerType = type;
-    this.slot          = slot;
-    this.stack         = stack;
+    this.slot     = slot;
+    this.stack    = stack;
   }
   
   @Override
@@ -37,7 +37,7 @@ public class CPacketContainerSlotChanged implements IEnderORPacket<ClientPackets
   }
   
   @Override
-  public void write(@NotNull PacketBuffer bufOut) throws IOException {
+  public void write(@NotNull PacketBuffer bufOut) {
     bufOut.writeString(containerType.typeName);
     bufOut.writeInt(slot);
     bufOut.writeCompoundTag(stack.serializeNBT());
