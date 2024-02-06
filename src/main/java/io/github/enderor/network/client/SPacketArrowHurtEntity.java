@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class SPacketArrowHurtEntity implements IEnderORPacket<ClientPacketHandler> {
+public class SPacketArrowHurtEntity implements IEnderORPacket<ServerPacketsHandler> {
   
   public SPacketArrowHurtEntity() {
   }
@@ -21,7 +21,7 @@ public class SPacketArrowHurtEntity implements IEnderORPacket<ClientPacketHandle
   public void write(@NotNull PacketBuffer bufOut) throws IOException { }
   
   @Override
-  public void progress(@NotNull ClientPacketHandler packetHandler) {
+  public void progress(@NotNull ServerPacketsHandler packetHandler) {
     packetHandler.progressSoundPlay();
   }
 }

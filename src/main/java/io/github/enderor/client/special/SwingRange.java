@@ -5,6 +5,7 @@ import io.github.enderor.client.utils.PlayerUtils;
 import io.github.enderor.config.EnderORClientConfigs;
 import io.github.enderor.enchantments.EnchantmentLongSword;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +17,7 @@ import org.lwjgl.opengl.GL11;
 @SideOnly (Side.CLIENT)
 @Mod.EventBusSubscriber
 public class SwingRange {
+  
   @SubscribeEvent
   public static void onEvent(RenderWorldLastEvent event) {
     if (!EnderORClientConfigs.ENABLE_SWING_RANGE_DISPLAY) { return; }
@@ -26,7 +28,17 @@ public class SwingRange {
     final double reach = me.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).getAttributeValue();
     final double left  = me.rotationYaw + 90D - swingRange;
     final double right = me.rotationYaw + 90D + swingRange;
+    final float  ticks = event.getPartialTicks();
+    
+    final RenderManager renderManager = PlayerUtils.getMc().getRenderManager();
+    
+    final double offsetX = me.posX + (me.prevPosX - me.posX) * (1D - ticks) - renderManager.viewerPosX;
+    final double offsetY = me.posY + (me.prevPosY - me.posY) * (1D - ticks) - renderManager.viewerPosY;
+    final double offsetZ = me.posZ + (me.prevPosZ - me.posZ) * (1D - ticks) - renderManager.viewerPosZ;
+    
+    GL11.glTranslated(offsetX, offsetY, offsetZ);
     draw(reach, left, right);
+    GL11.glTranslated(-offsetX, -offsetY, -offsetZ);
   }
   
   public static void draw(final double reach, final double left, final double right) {

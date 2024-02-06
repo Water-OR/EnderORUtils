@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class CPacketPlayerAttackMob implements IEnderORPacket<ServerPacketHandler> {
+public class CPacketPlayerAttackMob implements IEnderORPacket<ClientPacketsHandler> {
   public int tickSinceLastSwing;
   public int entityId;
   
@@ -34,7 +34,5 @@ public class CPacketPlayerAttackMob implements IEnderORPacket<ServerPacketHandle
   }
   
   @Override
-  public void progress(@NotNull ServerPacketHandler packetHandler) {
-    packetHandler.progressPlayerAttackMob(this);
-  }
+  public void progress(@NotNull ClientPacketsHandler packetHandler) { packetHandler.progressPlayerAttackMob(this); }
 }

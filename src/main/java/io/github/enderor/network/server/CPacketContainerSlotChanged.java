@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.*;
 
-public class CPacketContainerSlotChanged implements IEnderORPacket<ServerPacketHandler> {
+public class CPacketContainerSlotChanged implements IEnderORPacket<ClientPacketsHandler> {
   public CPacketContainerSlotChanged() { }
   
   ContainerType containerType;
@@ -44,7 +44,7 @@ public class CPacketContainerSlotChanged implements IEnderORPacket<ServerPacketH
   }
   
   @Override
-  public void progress(@NotNull ServerPacketHandler packetHandler) {
+  public void progress(@NotNull ClientPacketsHandler packetHandler) {
     packetHandler.progressSlotChanged(this);
   }
   

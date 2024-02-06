@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class CPacketPlayerNotInCoolDown implements IEnderORPacket<ServerPacketHandler> {
+public class CPacketPlayerNotInCoolDown implements IEnderORPacket<ClientPacketsHandler> {
   public boolean newState;
   
   public CPacketPlayerNotInCoolDown() { }
@@ -27,7 +27,7 @@ public class CPacketPlayerNotInCoolDown implements IEnderORPacket<ServerPacketHa
   }
   
   @Override
-  public void progress(@NotNull ServerPacketHandler packetHandler) {
+  public void progress(@NotNull ClientPacketsHandler packetHandler) {
     packetHandler.progressPlayerNotInCoolDown(this);
   }
 }

@@ -4,8 +4,6 @@ import baubles.api.BaubleType;
 import baubles.api.IBauble;
 import baubles.api.cap.BaublesCapabilities;
 import baubles.api.cap.BaublesContainer;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.enderor.items.EnderORItemHandler;
 import io.github.enderor.recipes.EnderORRecipesHandler;
@@ -24,20 +22,15 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.IntStream;
 
-public class ItemMagneticRing extends Item implements IBauble, IHasRecipe, ITickable {
-  private static final Map<EntityPlayer, List<EntityItem>> itemsNeedToPickUpByPlayer = Maps.newHashMap();
-  private static final List<EntityPlayer>                  deadPlayers               = Lists.newArrayList();
+public class ItemMagneticRing extends Item implements IBauble, IHasRecipe {
   
   public ItemMagneticRing() {
     setMaxDamage(0);
@@ -49,25 +42,26 @@ public class ItemMagneticRing extends Item implements IBauble, IHasRecipe, ITick
   public BaubleType getBaubleType(ItemStack itemStack) { return BaubleType.RING; }
   
   @Override
-  public void onWornTick(ItemStack itemstack, @NotNull EntityLivingBase player) {
-    if (!(player instanceof EntityPlayer)) { return; }
-    AxisAlignedBB boxAABB  = player.getEntityBoundingBox();
-    final boolean isRiding = player.isRiding() && !NullHelper.checkNull(player.getRidingEntity()).isDead;
+  public void onWornTick(ItemStack itemstack, @NotNull EntityLivingBase playerIn) {
+    if (!(playerIn instanceof EntityPlayer)) { return; }
+    final AxisAlignedBB boxAABB  = playerIn.getEntityBoundingBox();
+    final boolean       isRiding = playerIn.isRiding() && !NullHelper.checkNull(playerIn.getRidingEntity()).isDead;
     
-    if (isRiding) { boxAABB = player.getEntityBoundingBox().union(player.getRidingEntity().getEntityBoundingBox()); }
-    Set<EntityItem> itemSet = Sets.newHashSet(player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, boxAABB.grow(1D, isRiding ? 0D : .5, 1D)));
-    player.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, player.getEntityBoundingBox().grow(3D, 1D, 3D))
-          .stream().filter(item -> !item.getItem().isEmpty()).filter(item -> !item.cannotPickup()).filter(item -> !itemSet.contains(item))
-          .forEach(entityItem -> itemsNeedToPickUpByPlayer.computeIfAbsent((EntityPlayer) player, k -> Lists.newArrayList()).add(entityItem));
+    if (isRiding) { boxAABB.union(playerIn.getRidingEntity().getEntityBoundingBox()); }
+    final Set<EntityItem> itemSet = Sets.newHashSet(playerIn.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, boxAABB.grow(1D, isRiding ? 0D : .5, 1D)));
+    for (EntityItem item : playerIn.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, boxAABB.grow(3D, 1D, 3D))) {
+      if (itemSet.contains(item) || item.cannotPickup() || item.getItem().isEmpty() || item.isDead) { continue; }
+      item.onCollideWithPlayer(((EntityPlayer) playerIn));
+    }
   }
   
   @Override
   public void makeRecipe(@NotNull EnderORRecipesHandler handler) {
     Ingredient emerald  = Ingredient.fromItem(Items.EMERALD);
-    Ingredient redstone = Ingredient.fromItem(Items.REDSTONE);
+    Ingredient redStone = Ingredient.fromItem(Items.REDSTONE);
     handler.addRecipe(new ShapedRecipe(
       "magnetic_ring_blank", 3, 3, getDefaultInstance(),
-      redstone, emerald, Ingredient.EMPTY,
+      redStone, emerald, Ingredient.EMPTY,
       emerald, Ingredient.EMPTY, emerald,
       Ingredient.EMPTY, emerald, Ingredient.EMPTY
     ));
@@ -80,12 +74,14 @@ public class ItemMagneticRing extends Item implements IBauble, IHasRecipe, ITick
   public @NotNull ActionResult<ItemStack> onItemRightClick(@NotNull World worldIn, @NotNull EntityPlayer playerIn, @NotNull EnumHand handIn) {
     final ItemStack        stack     = playerIn.getHeldItem(handIn);
     final BaublesContainer container = (BaublesContainer) playerIn.getCapability(BaublesCapabilities.CAPABILITY_BAUBLES, null);
-    if (container == null) { return new ActionResult<>(EnumActionResult.PASS, stack); }
-    int fitSlot = IntStream.range(0, container.getSlots())
-                           .filter(i -> container.isItemValidForSlot(i, stack, playerIn))
-                           .findFirst().orElse(-1);
-    if (fitSlot < 0) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
-    return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(fitSlot, stack, false));
+    if (container == null) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
+    int bound = container.getSlots();
+    for (int i = 0; i < bound; i++) {
+      if (!container.isItemValidForSlot(i, stack, playerIn)) { continue; }
+      if (!container.getStackInSlot(i).isEmpty()) { continue; }
+      return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(i, stack, false));
+    }
+    return new ActionResult<>(EnumActionResult.FAIL, stack);
   }
   
   @Override
@@ -94,17 +90,5 @@ public class ItemMagneticRing extends Item implements IBauble, IHasRecipe, ITick
   @Override
   public void addInformation(@NotNull ItemStack stack, @Nullable World worldIn, @NotNull List<String> tooltip, @NotNull ITooltipFlag flagIn) {
     tooltip.add(I18n.format(getUnlocalizedNameInefficiently(stack) + ".description").trim());
-  }
-  
-  @Override
-  public void update() {
-    itemsNeedToPickUpByPlayer.forEach((player, items) -> {
-      if (player.isDead) { deadPlayers.add(player); } else {
-        items.stream().filter(item -> !item.isDead).forEach(item -> item.onCollideWithPlayer(player));
-        items.clear();
-      }
-    });
-    deadPlayers.forEach(itemsNeedToPickUpByPlayer::remove);
-    deadPlayers.clear();
   }
 }

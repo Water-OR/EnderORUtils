@@ -28,21 +28,19 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.potion.PotionType;
 import net.minecraft.potion.PotionUtils;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
+import net.minecraft.util.*;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.oredict.OreIngredient;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
   public ItemPotionRing() {
@@ -129,34 +127,41 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
   }
   
   @Override
-  public @NotNull ItemStack getDefaultInstance() {
-    return resetEffect(new ItemStack(this, 1, 0));
-  }
+  public @NotNull ItemStack getDefaultInstance() { return resetEffect(new ItemStack(this, 1, 0)); }
   
   @Override
   public @NotNull ActionResult<ItemStack> onItemRightClick(@NotNull World worldIn, @NotNull EntityPlayer playerIn, @NotNull EnumHand handIn) {
     final ItemStack        stack     = playerIn.getHeldItem(handIn);
     final BaublesContainer container = (BaublesContainer) playerIn.getCapability(BaublesCapabilities.CAPABILITY_BAUBLES, null);
-    if (container == null) { return new ActionResult<>(EnumActionResult.PASS, stack); }
-    int fitSlot = IntStream.range(0, container.getSlots())
-                           .filter(i -> container.isItemValidForSlot(i, stack, playerIn))
-                           .findFirst().orElse(-1);
-    if (fitSlot < 0) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
-    return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(fitSlot, stack, false));
+    if (container == null) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
+    int bound   = container.getSlots();
+    for (int i = 0; i < bound; i++) {
+      if (!container.isItemValidForSlot(i, stack, playerIn)) { continue; }
+      if (!container.getStackInSlot(i).isEmpty()) { continue; }
+      return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(i, stack, false));
+    }
+    return new ActionResult<>(EnumActionResult.FAIL, stack);
   }
   
   @Override
   public BaubleType getBaubleType(ItemStack itemStack) { return BaubleType.RING; }
   
-  @Override
-  public void onEquipped(ItemStack itemstack, @NotNull EntityLivingBase player) { getEffects(itemstack).forEach((potion, integer) -> player.addPotionEffect(new PotionEffect(potion, EnderORConfigs.EFFECT_LENGTH, integer))); }
+  private static int counter = 0;
   
   @Override
   public void onUnequipped(ItemStack itemstack, EntityLivingBase player) { getEffects(itemstack).forEach((potion, integer) -> player.removePotionEffect(potion)); }
   
   @Override
   public void onWornTick(ItemStack itemstack, @NotNull EntityLivingBase player) {
-    getEffects(itemstack).forEach((potion, level) -> player.addPotionEffect(new PotionEffect(potion, EnderORConfigs.EFFECT_LENGTH, level)));
+    if (player.getEntityWorld().isRemote) { return; }
+    boolean mustUpdate = counter == 0;
+    Map<Potion, Integer> potLvlMap = player.getActivePotionEffects().stream().collect(Collectors.toMap(PotionEffect::getPotion, PotionEffect::getAmplifier));
+    for (Map.Entry<Potion, Integer> entry : getEffects(itemstack).entrySet()) {
+      Potion potion = entry.getKey();
+      if (mustUpdate || potion.isInstant() || !potLvlMap.containsKey(potion) || potLvlMap.get(potion) < entry.getValue()) {
+        player.addPotionEffect(new PotionEffect(potion, EnderORConfigs.EFFECT_LENGTH, entry.getValue(), false, EnderORConfigs.EFFECT_SHOW_PARTICLES));
+      }
+    }
   }
   
   @Override
@@ -189,8 +194,8 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
       }
     }
     
-    final List<PotionType> effectsMultiple = EffectHelper.getMultipleEffectsPotions();
-    final Map<Potion, Integer> effectsIn = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
+    final List<PotionType>     effectsMultiple = EffectHelper.getMultipleEffectsPotions();
+    final Map<Potion, Integer> effectsIn       = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
     for (int i = 0, iMax = effectsMultiple.size(); i < iMax; ++i) {
       effectsIn.clear();
       effectsMultiple.get(i).getEffects().forEach(effect -> EffectHelper.mergeEffect(effectsIn, effect));
@@ -293,6 +298,13 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
         getEffects(stack).forEach((potion, level) -> effectList.add(new PotionEffect(potion, 1, level)));
         return effectList.isEmpty() ? -1 : PotionUtils.getPotionColorFromEffectList(effectList);
       }, EnderORItemHandler.ITEM_POTION_RING);
+    }
+    
+    @Contract (pure = true)
+    @SubscribeEvent
+    public static void onEvent(TickEvent.@NotNull PlayerTickEvent event) {
+      if (!TickEvent.Phase.END.equals(event.phase)) { return; }
+      counter = (counter + 1) % 100;
     }
   }
 }

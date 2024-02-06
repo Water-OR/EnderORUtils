@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class SPacketEnchantMaxLevelChange implements IEnderORPacket<ClientPacketHandler> {
+public class SPacketEnchantMaxLevelChange implements IEnderORPacket<ServerPacketsHandler> {
   public Enchantment enchantment;
   public int         maxLevel;
   
@@ -40,7 +40,7 @@ public class SPacketEnchantMaxLevelChange implements IEnderORPacket<ClientPacket
   }
   
   @Override
-  public void progress(@NotNull ClientPacketHandler packetHandler) {
+  public void progress(@NotNull ServerPacketsHandler packetHandler) {
     packetHandler.progressEnchantMaxLevelChange(this);
   }
 }

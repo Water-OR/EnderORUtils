@@ -40,36 +40,43 @@ public class EnchantmentLongSword extends Enchantment {
   public static final Set<EntityLivingBase> entityWouldAttack    = Sets.newHashSet();
   public static final Set<EntityPlayer>     playersNotInCoolDown = Sets.newHashSet();
   
-  public static  int     _ticksSinceLastSwing;
+  public static int _ticksSinceLastSwing;
   
   public static boolean onLeftClick(@NotNull EntityPlayer player) { return onLeftClick(player, false); }
   
   public static boolean onLeftClick(@NotNull EntityPlayer player, boolean flag) {
     if (canNotActive(player)) { return false; }
-    final int ticksSinceLastSwing = flag ? _ticksSinceLastSwing : player.ticksSinceLastSwing;
-    player.ticksSinceLastSwing = ticksSinceLastSwing;
-    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(player.getCooledAttackStrength(0F) >= 1F));
+    if (flag) { player.ticksSinceLastSwing = _ticksSinceLastSwing; }
+    final int ticksSinceLastSwing = player.ticksSinceLastSwing;
+    
     final double swingRange = getSwingRange(player);
-    final double reach      = player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).getAttributeValue();
-    double       l          = player.rotationYaw - swingRange;
-    double       r          = player.rotationYaw + swingRange;
+    final double reachRange = player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).getAttributeValue();
+    
+    double l = player.rotationYaw - swingRange;
+    double r = player.rotationYaw + swingRange;
+    
     for (; l < 0; l += 360D) { r += 360D; }
     final double finalL = l;
     final double finalR = r;
+    
     player.getEntityWorld().getEntities(EntityLivingBase.class, player::canEntityBeSeen).stream().filter(entity -> player != entity)
-          .filter(entity -> player.getDistanceSq(entity) <= reach * reach).filter(entity -> !(entity instanceof EntityPlayer))
+          .filter(entity -> player.getDistanceSq(entity) <= reachRange * reachRange).filter(entity -> !(entity instanceof EntityPlayer))
           .filter(entity -> !entity.isDead).filter(entity -> {
             double angle = CalculateHelper.getAngle(entity.posX - player.posX, entity.posZ - player.posZ) - 90D;
             while (angle < finalL) { angle += 360D; }
             return angle < finalR;
           }).forEach(entityWouldAttack::add);
+    if (entityWouldAttack.isEmpty()) {
+      if (flag) { player.resetCooldown(); }
+      return false;
+    }
+    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(true));
     for (EntityLivingBase entityLivingBase : entityWouldAttack) {
-      player.ticksSinceLastSwing = ticksSinceLastSwing;
       EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerAttackMob(ticksSinceLastSwing, entityLivingBase));
     }
+    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(false));
     player.resetCooldown();
     entityWouldAttack.clear();
-    EnderORNetworkHandler.INSTANCE.sendToServer(new CPacketPlayerNotInCoolDown(false));
     return true;
   }
   
