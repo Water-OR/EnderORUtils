@@ -16,7 +16,7 @@ item.potion_ring.name=Ring of potion
 item.magnetic_ring.name=Magnetic Ring
 item.enchanted_paper.name=Enchanted Paper
 
-item.slime_link.description=It's wet and sticky, but can avoid you from know back!
+item.slime_link.description=It's wet and sticky, but can avoid you from knock back!
 item.potion_ring.empty.description=Craft with an potion
 item.potion_ring.filled.description=Wear it to get the effect
 item.magnetic_ring.description=Pick up items in 3 1 3 range!
