@@ -6,11 +6,9 @@ import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
 
 public class SPacketConfigSync implements IEnderORPacket<ServerPacketsHandler> {
-  public int     effectLength;
   public boolean effectShowParticles;
   
   public SPacketConfigSync() {
-    effectLength        = EnderORConfigs.EFFECT_LENGTH;
     effectShowParticles = EnderORConfigs.EFFECT_SHOW_PARTICLES;
   }
   
@@ -19,13 +17,11 @@ public class SPacketConfigSync implements IEnderORPacket<ServerPacketsHandler> {
   
   @Override
   public void read(@NotNull PacketBuffer bufIn) {
-    effectLength        = bufIn.readInt();
     effectShowParticles = bufIn.readBoolean();
   }
   
   @Override
   public void write(@NotNull PacketBuffer bufOut) {
-    bufOut.writeInt(effectLength);
     bufOut.writeBoolean(effectShowParticles);
   }
   

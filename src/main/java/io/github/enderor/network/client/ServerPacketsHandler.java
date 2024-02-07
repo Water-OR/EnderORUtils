@@ -45,7 +45,6 @@ public class ServerPacketsHandler implements IPacketHandler {
   }
   
   public void progressConfigSync(@NotNull SPacketConfigSync packet) {
-    EnderORConfigs.EFFECT_LENGTH         = packet.effectLength;
     EnderORConfigs.EFFECT_SHOW_PARTICLES = packet.effectShowParticles;
   }
 }

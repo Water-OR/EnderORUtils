@@ -25,7 +25,6 @@ item.enchanted_paper.empty.description=It's empty!
 tile.enchant_mover.name=Enchant Mover
 
 config.enderor.default=Default
-config.enderor.default.effect_length=Effect Length
 config.enderor.default.effect_show_particles=Show Effect Particles
 
 config.enderor.client=Client

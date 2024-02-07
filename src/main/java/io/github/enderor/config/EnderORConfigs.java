@@ -8,12 +8,6 @@ import net.minecraftforge.common.config.Config;
 public class EnderORConfigs {
   private static final String PREFIX = "config." + EnderORUtils.MOD_ID + ".default.";
   
-  @Config.Comment ("Effect Length while wearing effect ring, too short may cause problem")
-  @Config.Name ("Effect Ring effect Length")
-  @Config.LangKey (PREFIX + "effect_length")
-  @Config.RangeInt (min = 1)
-  public static int EFFECT_LENGTH = 2000;
-  
   @Config.Comment ("Effect Particles while wearing effect ring.")
   @Config.Name ("Effect Ring effect show particles")
   @Config.LangKey (PREFIX + ".effect_show_particles")

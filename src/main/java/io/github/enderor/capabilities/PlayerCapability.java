@@ -2,6 +2,7 @@ package io.github.enderor.capabilities;
 
 import io.github.enderor.EnderORUtils;
 import io.github.enderor.utils.NullHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -77,7 +78,8 @@ public class PlayerCapability implements IPlayerCapability {
   @Mod.EventBusSubscriber
   public static class Handler {
     @SubscribeEvent
-    public static void onEvent(@NotNull AttachCapabilitiesEvent<EntityPlayer> event) {
+    public static void onEvent(@NotNull AttachCapabilitiesEvent<Entity> event) {
+      if (!(event.getObject() instanceof EntityPlayer)) { return; }
       if (event.getObject().hasCapability(Provider.PLAYER_CAPABILITY, null)) { return; }
       event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, NullHelper.checkNull(Provider.PLAYER_CAPABILITY).getName()), new Provider());
     }
