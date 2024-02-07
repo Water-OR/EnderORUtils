@@ -1,13 +1,14 @@
 package io.github.enderor.network;
 
 import io.github.enderor.EnderORUtils;
-import io.github.enderor.network.client.ClientPacketHandler;
 import io.github.enderor.network.client.SPacketArrowHurtEntity;
+import io.github.enderor.network.client.SPacketConfigSync;
 import io.github.enderor.network.client.SPacketEnchantMaxLevelChange;
+import io.github.enderor.network.client.ServerPacketsHandler;
 import io.github.enderor.network.server.CPacketContainerSlotChanged;
 import io.github.enderor.network.server.CPacketPlayerAttackMob;
 import io.github.enderor.network.server.CPacketPlayerNotInCoolDown;
-import io.github.enderor.network.server.ServerPacketHandler;
+import io.github.enderor.network.server.ClientPacketsHandler;
 import io.github.enderor.utils.ExceptionUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -35,8 +36,8 @@ public enum EnderORNetworkHandler {
   private final String          channelName = EnderORUtils.MOD_NAME.replace(' ', '_');
   private final FMLEventChannel channel     = NetworkRegistry.INSTANCE.newEventDrivenChannel(channelName);
   
-  private final ClientPacketHandler clientPacketHandler = new ClientPacketHandler();
-  private final ServerPacketHandler serverPacketHandler = new ServerPacketHandler();
+  private final ServerPacketsHandler serverPacketsHandler = new ServerPacketsHandler();
+  private final ClientPacketsHandler clientPacketsHandler = new ClientPacketsHandler();
   
   EnderORNetworkHandler() {
     channel.register(this);
@@ -63,16 +64,19 @@ public enum EnderORNetworkHandler {
       EnderORUtils.log(Level.ERROR, "Can't resolve client packet type of id {}", id);
       return;
     }
-    IEnderORPacket<ClientPacketHandler> packet = packetsClient.get(id);
+    IEnderORPacket<ServerPacketsHandler> packet = packetsClient.get(id);
     try {
       packet.read(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in reading packet {} from buffer", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
     try {
-      packet.progress(clientPacketHandler.setPlayerSP(player).setWorldClient(Minecraft.getMinecraft().world));
+      packet.progress(serverPacketsHandler.setPlayerSP(player).setWorldClient(Minecraft.getMinecraft().world));
     } catch (Exception e) {
-      ExceptionUtils.print(e.fillInStackTrace());
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
   }
   
@@ -83,16 +87,19 @@ public enum EnderORNetworkHandler {
       EnderORUtils.log(Level.ERROR, "Can't resolve server packet type of id {}", id);
       return;
     }
-    IEnderORPacket<ServerPacketHandler> packet = packetsServer.get(id);
+    IEnderORPacket<ClientPacketsHandler> packet = packetsServer.get(id);
     try {
       packet.read(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in reading packet {} from buffer", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
     try {
-      packet.progress(serverPacketHandler.setPlayerMP(player).setWorldServer(player.getServerWorld()));
+      packet.progress(clientPacketsHandler.setPlayerMP(player).setWorldServer(player.getServerWorld()));
     } catch (Exception e) {
-      ExceptionUtils.print(e.fillInStackTrace());
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
   }
   
@@ -103,9 +110,12 @@ public enum EnderORNetworkHandler {
     try {
       packet.write(buffer);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      EnderORUtils.log(Level.ERROR, "Failed in writing packet {} to buffer!", packet);
+      ExceptionUtils.print(e.fillInStackTrace());
+    } catch (Exception e) {
+      ExceptionUtils.print(new RuntimeException(e.fillInStackTrace()));
     }
-    return new FMLProxyPacket(new PacketBuffer(buffer), channelName);
+    return new FMLProxyPacket(buffer, channelName);
   }
   
   public void sendToDimension(IEnderORPacket<?> packet, int dim)                                      { channel.sendToDimension(createPacket(packet), dim); }
@@ -118,10 +128,10 @@ public enum EnderORNetworkHandler {
   
   public void sendToServer(IEnderORPacket<?> packet)                                                  { channel.sendToServer(createPacket(packet)); }
   
-  private static final Map<Integer, IEnderORPacket<ServerPacketHandler>> packetsServer = new HashMap<>();
-  private static final Map<Integer, IEnderORPacket<ClientPacketHandler>> packetsClient = new HashMap<>();
+  private static final Map<Integer, IEnderORPacket<ClientPacketsHandler>> packetsServer = new HashMap<>();
+  private static final Map<Integer, IEnderORPacket<ServerPacketsHandler>> packetsClient = new HashMap<>();
   
-  private static void addClientPacket(@NotNull IEnderORPacket<ClientPacketHandler> dummyPacket) {
+  private static void addClientPacket(@NotNull IEnderORPacket<ServerPacketsHandler> dummyPacket) {
     if (packetsClient.containsKey(dummyPacket.getId())) {
       EnderORUtils.log(Level.WARN, "Duplicate client packet! id {} is already used!", dummyPacket.getId());
       return;
@@ -129,7 +139,7 @@ public enum EnderORNetworkHandler {
     packetsClient.put(dummyPacket.getId(), dummyPacket);
   }
   
-  private static void addServerPacket(@NotNull IEnderORPacket<ServerPacketHandler> dummyPacket) {
+  private static void addServerPacket(@NotNull IEnderORPacket<ClientPacketsHandler> dummyPacket) {
     if (packetsServer.containsKey(dummyPacket.getId())) {
       EnderORUtils.log(Level.WARN, "Duplicate server packet! id {} is already used!", dummyPacket.getId());
       return;
@@ -143,5 +153,6 @@ public enum EnderORNetworkHandler {
     addServerPacket(new CPacketPlayerNotInCoolDown());
     addClientPacket(new SPacketArrowHurtEntity());
     addClientPacket(new SPacketEnchantMaxLevelChange());
+    addClientPacket(new SPacketConfigSync());
   }
 }

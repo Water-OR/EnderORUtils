@@ -4,9 +4,7 @@ import io.github.enderor.network.IEnderORPacket;
 import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
-public class SPacketArrowHurtEntity implements IEnderORPacket<ClientPacketHandler> {
+public class SPacketArrowHurtEntity implements IEnderORPacket<ServerPacketsHandler> {
   
   public SPacketArrowHurtEntity() {
   }
@@ -15,13 +13,13 @@ public class SPacketArrowHurtEntity implements IEnderORPacket<ClientPacketHandle
   public int getId() { return 0; }
   
   @Override
-  public void read(@NotNull PacketBuffer bufIn) throws IOException { }
+  public void read(@NotNull PacketBuffer bufIn) { }
   
   @Override
-  public void write(@NotNull PacketBuffer bufOut) throws IOException { }
+  public void write(@NotNull PacketBuffer bufOut) { }
   
   @Override
-  public void progress(@NotNull ClientPacketHandler packetHandler) {
+  public void progress(@NotNull ServerPacketsHandler packetHandler) {
     packetHandler.progressSoundPlay();
   }
 }

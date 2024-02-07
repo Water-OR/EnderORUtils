@@ -2,6 +2,7 @@ package io.github.enderor.capabilities;
 
 import com.google.common.collect.Lists;
 import io.github.enderor.EnderORUtils;
+import io.github.enderor.utils.NullHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.nbt.NBTBase;
@@ -22,7 +23,7 @@ import java.util.List;
 
 public class ArrowCapability implements IArrowCapability {
   private boolean disappearAfterLanded = false;
-  private boolean canDamageEMan = false;
+  private boolean canDamageEMan        = false;
   
   @Override
   public void setDisappearAfterLanded(boolean value) {
@@ -67,10 +68,12 @@ public class ArrowCapability implements IArrowCapability {
   
   public static class Provider implements ICapabilitySerializable<NBTTagCompound> {
     @CapabilityInject (IArrowCapability.class)
-    public static final Capability<IArrowCapability> ARROW_CAPABILITY = null;
-    private final       IArrowCapability             instance;
+    public static Capability<IArrowCapability> ARROW_CAPABILITY = null;
+    private final IArrowCapability             instance;
     
-    public Provider() { instance = ARROW_CAPABILITY.getDefaultInstance(); }
+    public Provider() {
+      instance = ARROW_CAPABILITY.getDefaultInstance();
+    }
     
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, @Nullable EnumFacing facing) {
@@ -92,6 +95,7 @@ public class ArrowCapability implements IArrowCapability {
     public void deserializeNBT(NBTTagCompound nbt) {
       ARROW_CAPABILITY.getStorage().readNBT(ARROW_CAPABILITY, instance, null, nbt);
     }
+    
   }
   
   @Mod.EventBusSubscriber
@@ -100,16 +104,20 @@ public class ArrowCapability implements IArrowCapability {
     public static void onEvent(TickEvent.@NotNull WorldTickEvent event) {
       if (event.phase != TickEvent.Phase.START) { return; }
       final List<Entity> arrows = Lists.newArrayList();
-      event.world.getEntities(EntityArrow.class, entity -> entity.inGround).stream()
-                 .filter(entity -> entity.hasCapability(Provider.ARROW_CAPABILITY, null))
-                 .filter(entity -> entity.getCapability(Provider.ARROW_CAPABILITY, null).getDisappearAfterLanded()).forEach(arrows::add);
-      arrows.forEach(Entity::setDead);
+      for (EntityArrow arrow : event.world.getEntities(EntityArrow.class, entity -> entity.inGround)) {
+        if (!arrow.hasCapability(Provider.ARROW_CAPABILITY, null)) { continue; }
+        if (NullHelper.checkNull(arrow.getCapability(Provider.ARROW_CAPABILITY, null)).getDisappearAfterLanded()) {
+          arrows.add(arrow);
+        }
+      }
+      for (int i = 0, iMax = arrows.size(); i < iMax; ++i) { if (!arrows.get(i).isDead) { arrows.get(i).setDead(); } }
     }
     
     @SubscribeEvent
     public static void onEvent(@NotNull AttachCapabilitiesEvent<Entity> event) {
-      if (!(event.getObject() instanceof EntityArrow) || event.getObject().hasCapability(Provider.ARROW_CAPABILITY, null)) { return; }
-      event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, Provider.ARROW_CAPABILITY.getDefaultInstance().getName()), new Provider());
+      if (!(event.getObject() instanceof EntityArrow)) { return; }
+      if (event.getObject().hasCapability(Provider.ARROW_CAPABILITY, null)) { return; }
+      event.addCapability(new ResourceLocation(EnderORUtils.MOD_ID, NullHelper.checkNull(Provider.ARROW_CAPABILITY.getDefaultInstance()).getName()), new Provider());
     }
   }
 }

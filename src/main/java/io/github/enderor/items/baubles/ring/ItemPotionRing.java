@@ -42,7 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
   public ItemPotionRing() {
@@ -129,34 +129,48 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
   }
   
   @Override
-  public @NotNull ItemStack getDefaultInstance() {
-    return resetEffect(new ItemStack(this, 1, 0));
-  }
+  public @NotNull ItemStack getDefaultInstance() { return resetEffect(new ItemStack(this, 1, 0)); }
   
   @Override
   public @NotNull ActionResult<ItemStack> onItemRightClick(@NotNull World worldIn, @NotNull EntityPlayer playerIn, @NotNull EnumHand handIn) {
     final ItemStack        stack     = playerIn.getHeldItem(handIn);
     final BaublesContainer container = (BaublesContainer) playerIn.getCapability(BaublesCapabilities.CAPABILITY_BAUBLES, null);
-    if (container == null) { return new ActionResult<>(EnumActionResult.PASS, stack); }
-    int fitSlot = IntStream.range(0, container.getSlots())
-                           .filter(i -> container.isItemValidForSlot(i, stack, playerIn))
-                           .findFirst().orElse(-1);
-    if (fitSlot < 0) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
-    return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(fitSlot, stack, false));
+    if (container == null) { return new ActionResult<>(EnumActionResult.FAIL, stack); }
+    int bound = container.getSlots();
+    for (int i = 0; i < bound; i++) {
+      if (!container.isItemValidForSlot(i, stack, playerIn)) { continue; }
+      if (!container.getStackInSlot(i).isEmpty()) { continue; }
+      return new ActionResult<>(EnumActionResult.SUCCESS, container.insertItem(i, stack, false));
+    }
+    return new ActionResult<>(EnumActionResult.FAIL, stack);
   }
   
   @Override
   public BaubleType getBaubleType(ItemStack itemStack) { return BaubleType.RING; }
   
   @Override
-  public void onEquipped(ItemStack itemstack, @NotNull EntityLivingBase player) { getEffects(itemstack).forEach((potion, integer) -> player.addPotionEffect(new PotionEffect(potion, EnderORConfigs.EFFECT_LENGTH, integer))); }
-  
-  @Override
   public void onUnequipped(ItemStack itemstack, EntityLivingBase player) { getEffects(itemstack).forEach((potion, integer) -> player.removePotionEffect(potion)); }
   
   @Override
   public void onWornTick(ItemStack itemstack, @NotNull EntityLivingBase player) {
-    getEffects(itemstack).forEach((potion, level) -> player.addPotionEffect(new PotionEffect(potion, EnderORConfigs.EFFECT_LENGTH, level)));
+    if (player.getEntityWorld().isRemote) { return; }
+    Map<Potion, PotionEffect> potLvlMap = player.getActivePotionEffects().stream().collect(Collectors.toMap(PotionEffect::getPotion, effect -> effect));
+    for (Map.Entry<Potion, Integer> entry : getEffects(itemstack).entrySet()) {
+      final Potion potion = entry.getKey();
+      if (potion.isInstant() || !potLvlMap.containsKey(potion)) {
+        addEffectToPlayer(player, potion, entry.getValue());
+      } else {
+        final PotionEffect effect = potLvlMap.get(potion);
+        if (effect.getAmplifier() < entry.getValue() || effect.getDuration() < Short.MAX_VALUE ||
+            effect.doesShowParticles() != EnderORConfigs.EFFECT_SHOW_PARTICLES) {
+          addEffectToPlayer(player, potion, entry.getValue());
+        }
+      }
+    }
+  }
+  
+  private static void addEffectToPlayer(@NotNull EntityLivingBase player, Potion potion, int level) {
+    player.addPotionEffect(new PotionEffect(potion, potion.isInstant() ? 5 : Integer.MAX_VALUE, level, false, EnderORConfigs.EFFECT_SHOW_PARTICLES));
   }
   
   @Override
@@ -189,8 +203,8 @@ public class ItemPotionRing extends Item implements IBauble, IHasRecipe {
       }
     }
     
-    final List<PotionType> effectsMultiple = EffectHelper.getMultipleEffectsPotions();
-    final Map<Potion, Integer> effectsIn = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
+    final List<PotionType>     effectsMultiple = EffectHelper.getMultipleEffectsPotions();
+    final Map<Potion, Integer> effectsIn       = Maps.newTreeMap(Comparator.comparingInt(Potion::getIdFromPotion));
     for (int i = 0, iMax = effectsMultiple.size(); i < iMax; ++i) {
       effectsIn.clear();
       effectsMultiple.get(i).getEffects().forEach(effect -> EffectHelper.mergeEffect(effectsIn, effect));

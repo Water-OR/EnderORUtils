@@ -3,6 +3,7 @@ package io.github.enderor.items;
 import io.github.enderor.EnderORUtils;
 import io.github.enderor.items.baubles.ring.ItemMagneticRing;
 import io.github.enderor.items.baubles.ring.ItemPotionRing;
+import io.github.enderor.items.baubles.trinket.ItemSlimeLink;
 import io.github.enderor.recipes.EnderORRecipesHandler;
 import io.github.enderor.recipes.IHasRecipe;
 import io.github.enderor.utils.NullHelper;
@@ -21,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 public class EnderORItemHandler {
   private static final List<Item> itemList = new ArrayList<>();
@@ -49,14 +49,16 @@ public class EnderORItemHandler {
   
   static {
     addItem(ITEM_MOD = new ItemMod(), "item_mod");
+    addItem(ITEM_SLIME_LINK = new ItemSlimeLink(), "slime_link");
     addItem(ITEM_POTION_RING = new ItemPotionRing(), "potion_ring");
     addItem(ITEM_MAGNETIC_RING = new ItemMagneticRing(), "magnetic_ring");
     addItem(ITEM_ENCHANTED_PAPER = new ItemEnchantedPaper(), "enchanted_paper");
   }
   
-  public static final ItemMod ITEM_MOD;
-  public static final ItemPotionRing ITEM_POTION_RING;
-  public static final ItemMagneticRing ITEM_MAGNETIC_RING;
+  public static final ItemMod            ITEM_MOD;
+  public static final ItemSlimeLink      ITEM_SLIME_LINK;
+  public static final ItemPotionRing     ITEM_POTION_RING;
+  public static final ItemMagneticRing   ITEM_MAGNETIC_RING;
   public static final ItemEnchantedPaper ITEM_ENCHANTED_PAPER;
   
   @Mod.EventBusSubscriber

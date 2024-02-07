@@ -117,17 +117,16 @@ dependencies {
   implementation("com.enderio:EnderIO:${project.minecraft.version}-${project.ender_IO_version}") { transitive = false }
   implementation("info.loenwind.autoconfig:AutoConfig:+")
   implementation("info.loenwind.autosave:AutoSave:1.12.2-+")
-//  implementation('curse.maven:endercore-231868:4671384')
-//  implementation('curse.maven:ender-io-64578:4674244')
-//  implementation ('curse.maven:bookshelf-228525:2836960-deobf-2836962-sources-2836961')
-//  implementation ('curse.maven:enchanting-plus-59413:2664227-deobf-2664230-sources-2664228')
-//  implementation ('curse.maven:potion-core-242872:2905184-deobf-2905186-sources-2905187')
-//  implementation rfg.deobf('curse.maven:just-enough-characters-250702:4692184')
-//  implementation rfg.deobf('curse.maven:had-enough-characters-640802:4874506')
-//  implementation rfg.deobf('curse.maven:so-many-enchantments-267035:3574478')
-//  implementation rfg.deobf('curse.maven:liquid-enchanting-289330:2925360')
-//  implementation rfg.deobf('curse.maven:combined-potions-262420:2460171')
-//  implementation rfg.deobf('curse.maven:reid-629017:4949840')
+  api ('curse.maven:bookshelf-228525:2836960-deobf-2836962-sources-2836961')
+  api ('curse.maven:enchanting-plus-59413:2664227-deobf-2664230-sources-2664228')
+  api ('curse.maven:potion-core-242872:2905184-deobf-2905186-sources-2905187')
+  api rfg.deobf('curse.maven:just-enough-characters-250702:4692184')
+  api rfg.deobf('curse.maven:had-enough-characters-640802:4874506')
+  api rfg.deobf('curse.maven:so-many-enchantments-267035:3574478')
+  api rfg.deobf('curse.maven:liquid-enchanting-289330:2925360')
+  api rfg.deobf('curse.maven:combined-potions-262420:2460171')
+//  api rfg.deobf('curse.maven:reid-629017:4949840')
+//  api 'curse.maven:bring-me-the-rings-309878:2653339'
 
   if (project.use_mixins.toBoolean()) {
     // Change your mixin refmap name here:

@@ -5,9 +5,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.network.PacketBuffer;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
-public class CPacketPlayerAttackMob implements IEnderORPacket<ServerPacketHandler> {
+public class CPacketPlayerAttackMob implements IEnderORPacket<ClientPacketsHandler> {
   public int tickSinceLastSwing;
   public int entityId;
   
@@ -22,19 +20,17 @@ public class CPacketPlayerAttackMob implements IEnderORPacket<ServerPacketHandle
   public int getId() { return 1; }
   
   @Override
-  public void read(@NotNull PacketBuffer bufIn) throws IOException {
+  public void read(@NotNull PacketBuffer bufIn) {
     tickSinceLastSwing = bufIn.readInt();
     entityId           = bufIn.readInt();
   }
   
   @Override
-  public void write(@NotNull PacketBuffer bufOut) throws IOException {
+  public void write(@NotNull PacketBuffer bufOut) {
     bufOut.writeInt(tickSinceLastSwing);
     bufOut.writeInt(entityId);
   }
   
   @Override
-  public void progress(@NotNull ServerPacketHandler packetHandler) {
-    packetHandler.progressPlayerAttackMob(this);
-  }
+  public void progress(@NotNull ClientPacketsHandler packetHandler) { packetHandler.progressPlayerAttackMob(this); }
 }
